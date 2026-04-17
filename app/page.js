@@ -4,6 +4,9 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
+const DEBUG_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
+const DEBUG_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 // Haversine distance in nautical miles between two lat/lng points
 function haversineNm(lat1, lon1, lat2, lon2) {
   const R = 3440.065
@@ -280,6 +283,12 @@ export default function TrackingPage() {
             {pointCount} GPS {pointCount === 1 ? 'point' : 'points'} recorded
           </p>
         )}
+
+        {/* Debug info */}
+        <div className="bg-white rounded-2xl px-4 py-3 text-[11px] font-mono break-all text-[#8E8E93] space-y-1">
+          <p><span className="text-black font-semibold">URL:</span> {DEBUG_URL ?? 'undefined'}</p>
+          <p><span className="text-black font-semibold">KEY:</span> {DEBUG_KEY ? DEBUG_KEY.slice(0, 40) + '…' : 'undefined'}</p>
+        </div>
 
         {/* Start / Stop */}
         <button
