@@ -287,7 +287,9 @@ export default function TrackingPage() {
         {/* Debug info */}
         <div className="bg-white rounded-2xl px-4 py-3 text-[11px] font-mono break-all text-[#8E8E93] space-y-1">
           <p><span className="text-black font-semibold">URL:</span> {DEBUG_URL ?? 'undefined'}</p>
-          <p><span className="text-black font-semibold">KEY:</span> {DEBUG_KEY ? DEBUG_KEY.slice(0, 40) + '…' : 'undefined'}</p>
+          <p><span className="text-black font-semibold">KEY length:</span> {DEBUG_KEY ? DEBUG_KEY.trim().length : 'undefined'}</p>
+          <p><span className="text-black font-semibold">KEY start:</span> {DEBUG_KEY ? DEBUG_KEY.trim().slice(0, 40) + '…' : 'undefined'}</p>
+          <p><span className="text-black font-semibold">KEY end:</span> {DEBUG_KEY ? '…' + DEBUG_KEY.trim().slice(-20) : 'undefined'}</p>
         </div>
 
         {/* Start / Stop */}
