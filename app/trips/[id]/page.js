@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
+import { redirect } from 'next/navigation'
 import TripMap from './TripMap'
 
 export const dynamic = 'force-dynamic'
@@ -20,15 +21,19 @@ function formatDuration(seconds) {
 
 export default async function TripDetailPage({ params }) {
   const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   const [{ data: trip }, { data: points }] = await Promise.all([
-    supabase.from('trips').select('*').eq('id', id).single(),
+    supabase.from('trips').select('*').eq('id', id).eq('user_id', user.id).single(),
     supabase
       .from('track_points')
       .select('lat, lng, speed, course, recorded_at')
       .eq('trip_id', id)
       .order('recorded_at', { ascending: true }),
   ])
+
+  if (!trip) redirect('/trips')
 
   const hasPoints = points && points.length > 0
 

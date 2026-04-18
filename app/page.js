@@ -169,8 +169,11 @@ export default function TrackingPage() {
     if (!navigator.geolocation) { setStatus('error'); setStatusMsg('GPS not available.'); return }
     setStatus('uploading'); setStatusMsg('Creating trip…')
 
-    const { data, error } = await supabase.from('trips').insert({ started_at: new Date().toISOString() }).select('id').single()
-    if (error) { setStatus('error'); setStatusMsg('Could not create trip: ' + error.message); return }
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setStatus('error'); setStatusMsg('Not signed in.'); return }
+
+    const { data, error } = await supabase.from('trips').insert({ started_at: new Date().toISOString(), user_id: user.id }).select('id').single()
+    if (error) { setStatus('error'); setStatusMsg('Could not create trip.'); return }
 
     tripIdRef.current = data.id
     startTimeRef.current = Date.now()
@@ -241,6 +244,12 @@ export default function TrackingPage() {
         <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', gap: 10 }}>
           <WayLogIcon size={28} instanceId="header" />
           <span style={{ fontSize: 18, fontWeight: 700, color: '#202124', letterSpacing: '-0.3px' }}>Way Log</span>
+          <button
+            onClick={() => supabase.auth.signOut().then(() => { window.location.href = '/login' })}
+            style={{ marginLeft: 'auto', fontSize: 13, color: '#5f6368', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 6 }}
+          >
+            Sign out
+          </button>
         </div>
       </header>
 

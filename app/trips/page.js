@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-server'
+import SignOutButton from '@/app/SignOutButton'
 
 // Always fetch live data — never statically build this page
 export const dynamic = 'force-dynamic'
@@ -20,9 +21,12 @@ function formatDuration(seconds) {
 }
 
 export default async function TripsPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   const { data: trips, error } = await supabase
     .from('trips')
     .select('id, started_at, ended_at, duration_seconds')
+    .eq('user_id', user.id)
     .order('started_at', { ascending: false })
 
   return (
@@ -34,7 +38,7 @@ export default async function TripsPage() {
             ← Track
           </Link>
           <span className="font-semibold text-[17px]">All Trips</span>
-          <div className="w-16" />
+          <SignOutButton />
         </div>
       </header>
 
