@@ -44,7 +44,9 @@ function StatCard({ label, value, sub }) {
 export default function TrackingPage() {
   const { isTracking, tripId, tripStartTime, startTrip, endTrip, setCurrentPosition } = useTripContext()
 
-  const [splash, setSplash] = useState(true)
+  const [splash, setSplash] = useState(() =>
+    typeof window !== 'undefined' ? !sessionStorage.getItem('splashShown') : false
+  )
   const [splashFading, setSplashFading] = useState(false)
   const [position, setPosition] = useState(null)
   const [initialMapCenter] = useState(() => {
@@ -71,10 +73,12 @@ export default function TrackingPage() {
   const wakeLockRef = useRef(null)
 
   useEffect(() => {
+    if (!splash) return
+    sessionStorage.setItem('splashShown', '1')
     const fadeTimer = setTimeout(() => setSplashFading(true), 800)
     const hideTimer = setTimeout(() => setSplash(false), 1200)
     return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer) }
-  }, [])
+  }, [splash])
 
   // Get a position fix on open so the map zooms in immediately, even without an active trip
   useEffect(() => {

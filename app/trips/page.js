@@ -1,18 +1,25 @@
-import { createClient } from '@/lib/supabase-server'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 import BottomNav from '@/app/BottomNav'
 import WayLogIcon from '@/app/WayLogIcon'
 import TripsList from './TripsList'
 
-export const dynamic = 'force-dynamic'
+export default function TripsPage() {
+  const [trips, setTrips] = useState(null)
+  const [error, setError] = useState(false)
 
-export default async function TripsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: trips, error } = await supabase
-    .from('trips')
-    .select('id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng')
-    .eq('user_id', user.id)
-    .order('started_at', { ascending: false })
+  useEffect(() => {
+    supabase
+      .from('trips')
+      .select('id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng')
+      .order('started_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (error) setError(true)
+        else setTrips(data ?? [])
+      })
+  }, [])
 
   return (
     <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>
@@ -33,7 +40,13 @@ export default async function TripsPage() {
             </div>
           )}
 
-          {!error && <TripsList initialTrips={trips ?? []} />}
+          {!error && trips === null && (
+            <div style={{ textAlign: 'center', padding: '60px 0', color: '#9aa0a6', fontSize: 14 }}>
+              Loading…
+            </div>
+          )}
+
+          {!error && trips !== null && <TripsList initialTrips={trips} />}
 
         </div>
       </div>
