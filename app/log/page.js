@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import BottomNav from '@/app/BottomNav'
+import WayLogIcon from '@/app/WayLogIcon'
 import { useTripContext } from '@/app/TripContext'
 
 const EVENTS = ['TACK', 'JIBE', 'REEF', 'UNREEF']
@@ -58,8 +59,9 @@ export default function LogEntryPage() {
     <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>
 
       <header style={{ background: '#fff', borderBottom: '1px solid #e8eaed', flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center' }}>
-          <span style={{ fontSize: 18, fontWeight: 700, color: '#202124', letterSpacing: '-0.3px' }}>Log Entry</span>
+        <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <WayLogIcon size={28} instanceId="log-header" />
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#202124', letterSpacing: '-0.3px' }}>Logbook Nadira</span>
         </div>
       </header>
 
