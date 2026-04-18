@@ -61,7 +61,7 @@ export default async function TripsPage() {
             </p>
             <div className="bg-white rounded-2xl overflow-hidden divide-y divide-black/[0.08]">
               {trips.map((trip) => (
-                <div key={trip.id} className="px-4 py-4">
+                <Link key={trip.id} href={`/trips/${trip.id}`} className="block px-4 py-4 active:bg-black/[0.04] transition-colors">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-[17px] font-semibold text-black">
@@ -82,7 +82,7 @@ export default async function TripsPage() {
                       <path d="M1 1l6 5.5L1 12" stroke="#C7C7CC" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </>
