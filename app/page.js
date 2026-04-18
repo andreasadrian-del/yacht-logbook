@@ -42,7 +42,7 @@ function StatCard({ label, value, sub }) {
 }
 
 export default function TrackingPage() {
-  const { isTracking, startTrip, endTrip, setCurrentPosition } = useTripContext()
+  const { isTracking, tripId, tripStartTime, startTrip, endTrip, setCurrentPosition } = useTripContext()
 
   const [splash, setSplash] = useState(true)
   const [splashFading, setSplashFading] = useState(false)
@@ -69,6 +69,7 @@ export default function TrackingPage() {
     return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer) }
   }, [])
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current)
@@ -86,6 +87,54 @@ export default function TrackingPage() {
     if (error) console.error('Upload error:', error.message)
   }, [])
 
+  const handleGpsUpdate = useCallback((pos) => {
+    const { latitude, longitude, speed, heading, accuracy } = pos.coords
+    if (accuracy > 50) return
+
+    const speedKnots = speed != null ? speed * 1.94384 : null
+    setPosition({ lat: latitude, lng: longitude, speed: speedKnots, course: heading, accuracy })
+    setCurrentPosition({ lat: latitude, lng: longitude })
+
+    const now = Date.now()
+    if (now - lastRecordedRef.current < 30000) return
+    lastRecordedRef.current = now
+
+    const point = {
+      lat: latitude, lng: longitude,
+      speed: speedKnots != null ? Math.round(speedKnots * 10) / 10 : null,
+      course: heading != null ? Math.round(heading) : null,
+      timestamp: new Date(pos.timestamp).toISOString(),
+    }
+    pendingPointsRef.current.push(point)
+    setTrackPoints(prev => [...prev, { lat: latitude, lng: longitude }])
+
+    if (lastPositionRef.current) {
+      distanceRef.current += haversineNm(lastPositionRef.current.lat, lastPositionRef.current.lng, latitude, longitude)
+      setDistanceNm(Math.round(distanceRef.current * 100) / 100)
+    }
+    lastPositionRef.current = { lat: latitude, lng: longitude }
+  }, [setCurrentPosition])
+
+  const startWatching = useCallback(() => {
+    timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000)), 1000)
+    uploadIntervalRef.current = setInterval(uploadPending, 30000)
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      handleGpsUpdate,
+      (err) => { setStatus('error'); setStatusMsg('GPS error: ' + err.message) },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    )
+  }, [uploadPending, handleGpsUpdate])
+
+  // Restore tracking state when returning to this tab mid-trip
+  useEffect(() => {
+    if (isTracking !== true || !tripId || watchIdRef.current) return
+    tripIdRef.current = tripId
+    startTimeRef.current = tripStartTime || Date.now()
+    setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000))
+    lastRecordedRef.current = 0
+    startWatching()
+  }, [isTracking, tripId, tripStartTime, startWatching])
+
   const startTripHandler = async () => {
     if (!navigator.geolocation) { setStatus('error'); setStatusMsg('GPS not available.'); return }
     setStatus('uploading'); setStatusMsg('Creating trip…')
@@ -100,47 +149,13 @@ export default function TrackingPage() {
     if (error) { setStatus('error'); setStatusMsg('Could not create trip.'); return }
 
     tripIdRef.current = data.id
-    startTrip(data.id)
     startTimeRef.current = Date.now()
     lastPositionRef.current = null
     distanceRef.current = 0; pendingPointsRef.current = []; lastRecordedRef.current = 0
     setDistanceNm(0); setElapsed(0); setPosition(null); setTrackPoints([])
 
-    timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000)), 1000)
-    uploadIntervalRef.current = setInterval(uploadPending, 30000)
-
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        const { latitude, longitude, speed, heading, accuracy } = pos.coords
-        if (accuracy > 50) return
-
-        const speedKnots = speed != null ? speed * 1.94384 : null
-        setPosition({ lat: latitude, lng: longitude, speed: speedKnots, course: heading, accuracy })
-        setCurrentPosition({ lat: latitude, lng: longitude })
-
-        const now = Date.now()
-        if (now - lastRecordedRef.current < 30000) return
-        lastRecordedRef.current = now
-
-        const point = {
-          lat: latitude, lng: longitude,
-          speed: speedKnots != null ? Math.round(speedKnots * 10) / 10 : null,
-          course: heading != null ? Math.round(heading) : null,
-          timestamp: new Date(pos.timestamp).toISOString(),
-        }
-        pendingPointsRef.current.push(point)
-        setTrackPoints(prev => [...prev, { lat: latitude, lng: longitude }])
-
-        if (lastPositionRef.current) {
-          distanceRef.current += haversineNm(lastPositionRef.current.lat, lastPositionRef.current.lng, latitude, longitude)
-          setDistanceNm(Math.round(distanceRef.current * 100) / 100)
-        }
-        lastPositionRef.current = { lat: latitude, lng: longitude }
-      },
-      (err) => { setStatus('error'); setStatusMsg('GPS error: ' + err.message) },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    )
-
+    startTrip(data.id) // persists to localStorage
+    startWatching()
     setStatus('tracking'); setStatusMsg('')
   }
 
@@ -148,6 +163,7 @@ export default function TrackingPage() {
     if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current)
     if (uploadIntervalRef.current) clearInterval(uploadIntervalRef.current)
     if (timerRef.current) clearInterval(timerRef.current)
+    watchIdRef.current = null
     setStatus('uploading'); setStatusMsg('Saving trip…')
     await uploadPending()
     await supabase.from('trips').update({
@@ -229,7 +245,6 @@ export default function TrackingPage() {
             <StatCard
               label="TIME"
               value={`${Math.floor(elapsed / 60)} min`}
-              sub={null}
             />
           </div>
 
