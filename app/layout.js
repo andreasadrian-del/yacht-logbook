@@ -6,6 +6,9 @@ export const metadata = {
   title: "Logbook Nadira",
   description: "GPS sailing logbook for yacht Nadira",
   manifest: "/manifest.json",
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -23,9 +26,6 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="h-full">
-      <head>
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-      </head>
       <body className="min-h-full antialiased">
         <TripProvider>{children}</TripProvider>
         <PWAInit />
