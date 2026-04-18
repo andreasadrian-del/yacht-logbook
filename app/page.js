@@ -62,6 +62,7 @@ export default function TrackingPage() {
   const lastPositionRef = useRef(null)
   const lastRecordedRef = useRef(0)
   const distanceRef = useRef(0)
+  const wakeLockRef = useRef(null)
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => setSplashFading(true), 800)
@@ -75,6 +76,7 @@ export default function TrackingPage() {
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current)
       if (uploadIntervalRef.current) clearInterval(uploadIntervalRef.current)
       if (timerRef.current) clearInterval(timerRef.current)
+      wakeLockRef.current?.release()
     }
   }, [])
 
@@ -156,18 +158,26 @@ export default function TrackingPage() {
     startWatching()
   }, [isTracking, tripId, tripStartTime, startWatching])
 
-  // On screen unlock: correct elapsed display and force-record the next GPS fix immediately
+  const acquireWakeLock = useCallback(async () => {
+    if (!('wakeLock' in navigator)) return
+    try {
+      wakeLockRef.current = await navigator.wakeLock.request('screen')
+    } catch (_) {}
+  }, [])
+
+  // On screen unlock: re-acquire wake lock, correct elapsed, force-record next GPS fix
   useEffect(() => {
     if (!isTracking) return
     const handleVisibility = () => {
       if (document.visibilityState === 'visible' && startTimeRef.current) {
         setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000))
-        lastRecordedRef.current = 0 // skip throttle so next GPS update is saved
+        lastRecordedRef.current = 0
+        acquireWakeLock()
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
-  }, [isTracking])
+  }, [isTracking, acquireWakeLock])
 
   const startTripHandler = async () => {
     if (!navigator.geolocation) { setStatus('error'); setStatusMsg('GPS not available.'); return }
@@ -190,6 +200,7 @@ export default function TrackingPage() {
 
     startTrip(data.id) // persists to localStorage
     startWatching()
+    acquireWakeLock()
     setStatus('tracking'); setStatusMsg('')
   }
 
@@ -198,6 +209,7 @@ export default function TrackingPage() {
     if (uploadIntervalRef.current) clearInterval(uploadIntervalRef.current)
     if (timerRef.current) clearInterval(timerRef.current)
     watchIdRef.current = null
+    wakeLockRef.current?.release(); wakeLockRef.current = null
     setStatus('uploading'); setStatusMsg('Saving trip…')
     await uploadPending()
     await supabase.from('trips').update({
