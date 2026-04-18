@@ -57,10 +57,9 @@ function generateTimeline(trip, points, entries) {
   const start = new Date(trip.started_at)
   const end = trip.ended_at ? new Date(trip.ended_at) : new Date()
 
-  // Snap start down to nearest 5-minute floor
   const snap = new Date(start)
   snap.setSeconds(0, 0)
-  snap.setMinutes(snap.getMinutes() - (snap.getMinutes() % 5))
+  snap.setMilliseconds(0)
 
   const intervals = []
   let current = snap
