@@ -8,6 +8,8 @@ const EVENT_COLORS = {
   jibe: '#1a73e8',
   reef: '#f29900',
   unreef: '#34a853',
+  'engine on': '#34a853',
+  'engine off': '#ea4335',
   comment: '#9334e6',
 }
 

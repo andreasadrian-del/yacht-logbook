@@ -6,7 +6,7 @@ import BottomNav from '@/app/BottomNav'
 import WayLogIcon from '@/app/WayLogIcon'
 import { useTripContext } from '@/app/TripContext'
 
-const EVENTS = ['TACK', 'JIBE', 'REEF', 'UNREEF']
+const EVENTS = ['TACK', 'JIBE', 'REEF', 'UNREEF', 'ENGINE ON', 'ENGINE OFF']
 
 function CheckIcon() {
   return (
@@ -81,7 +81,7 @@ export default function LogEntryPage() {
             <p style={{ fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>
               Quick Event
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {EVENTS.map(type => {
                 const isConfirmed = confirmed === type
                 return (
@@ -90,14 +90,14 @@ export default function LogEntryPage() {
                     onClick={() => logEvent(type)}
                     disabled={disabled}
                     style={{
-                      width: '100%', padding: '18px', borderRadius: 14, fontSize: 16, fontWeight: 600,
+                      padding: '18px 8px', borderRadius: 14, fontSize: 15, fontWeight: 600,
                       cursor: disabled ? 'default' : 'pointer',
                       background: disabled ? '#f1f3f4' : isConfirmed ? '#e6f4ea' : '#fff',
                       color: disabled ? '#bdc1c6' : isConfirmed ? '#34a853' : '#202124',
                       border: `1.5px solid ${disabled ? '#e8eaed' : isConfirmed ? '#34a853' : '#e8eaed'}`,
                       boxShadow: disabled ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
                       transition: 'all 0.15s',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                     }}
                   >
                     {isConfirmed ? <><CheckIcon /> Saved</> : type}

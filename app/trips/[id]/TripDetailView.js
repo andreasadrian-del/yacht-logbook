@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import TripMap from './TripMap'
 
-const EVENT_LABELS = { tack: 'Tack', jibe: 'Jibe', reef: 'Reef', unreef: 'Unreef' }
+const EVENT_LABELS = { tack: 'Tack', jibe: 'Jibe', reef: 'Reef', unreef: 'Unreef', 'engine on': 'Engine On', 'engine off': 'Engine Off' }
 
 function EventPill({ entry, onCommentClick }) {
   if (entry.event_type === 'comment') {
