@@ -45,7 +45,9 @@ export default function TripDetailView({ trip, intervals, points, entries }) {
           <Link href="/trips" style={{ color: '#1a73e8', fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>
             ← Trips
           </Link>
-          <span style={{ fontSize: 17, fontWeight: 700, color: '#202124' }}>{trip.dateLabel}</span>
+          <span style={{ fontSize: 17, fontWeight: 700, color: '#202124' }}>
+            {new Date(trip.started_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
         </div>
       </header>
 
@@ -72,7 +74,7 @@ export default function TripDetailView({ trip, intervals, points, entries }) {
                 {intervals.map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid #f1f3f4' }}>
                     <td style={{ padding: '9px 12px', color: '#202124', fontWeight: 500, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
-                      {row.time}
+                      {new Date(row.isoTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td style={{ padding: '9px 8px', color: '#5f6368', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                       {row.cog != null ? `${Math.round(row.cog)}°` : '—'}

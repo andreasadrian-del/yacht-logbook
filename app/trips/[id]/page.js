@@ -83,7 +83,7 @@ function generateTimeline(trip, points, entries) {
     })
 
     intervals.push({
-      time: current.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+      isoTime: current.toISOString(),
       cog: point?.calcCog ?? null,
       sog: point?.calcSog ?? null,
       entries: windowEntries,
@@ -108,15 +108,11 @@ export default async function TripDetailPage({ params }) {
 
   if (!trip) redirect('/trips')
 
-  const dateLabel = new Date(trip.started_at).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  })
-
   const intervals = generateTimeline(trip, points, entries)
 
   return (
     <TripDetailView
-      trip={{ ...trip, dateLabel }}
+      trip={trip}
       intervals={intervals}
       points={points ?? []}
       entries={entries ?? []}
