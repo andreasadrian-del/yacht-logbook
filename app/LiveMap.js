@@ -13,11 +13,9 @@ export default function LiveMap({ trackPoints, currentPosition }) {
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return
 
-    Promise.all([
-      import('leaflet'),
-      import('leaflet-gesture-handling'),
-      import('leaflet-gesture-handling/dist/leaflet-gesture-handling.css'),
-    ]).then(([{ default: L }]) => {
+    import('leaflet').then(async ({ default: L }) => {
+      await import('leaflet-gesture-handling')
+      await import('leaflet-gesture-handling/dist/leaflet-gesture-handling.css')
       const map = L.map(containerRef.current, { zoomControl: false, attributionControl: false, gestureHandling: true })
       mapRef.current = map
 
