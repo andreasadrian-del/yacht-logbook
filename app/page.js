@@ -86,7 +86,9 @@ export default function TrackingPage() {
     const { error } = await supabase.from('track_points').insert(
       batch.map(p => ({ trip_id: tripIdRef.current, recorded_at: p.timestamp, lat: p.lat, lng: p.lng, speed: p.speed, course: p.course }))
     )
-    if (error) console.error('Upload error:', error.message)
+    if (error) { console.error('Upload error:', error.message); return }
+    const last = batch[batch.length - 1]
+    await supabase.from('trips').update({ last_lat: last.lat, last_lng: last.lng }).eq('id', tripIdRef.current)
   }, [])
 
   const handleGpsUpdate = useCallback((pos) => {
@@ -216,6 +218,10 @@ export default function TrackingPage() {
       ended_at: new Date().toISOString(),
       duration_seconds: Math.floor((Date.now() - startTimeRef.current) / 1000),
       distance_nm: Math.round(distanceRef.current * 100) / 100,
+      ...(lastPositionRef.current && {
+        last_lat: lastPositionRef.current.lat,
+        last_lng: lastPositionRef.current.lng,
+      }),
     }).eq('id', tripIdRef.current)
     endTrip()
     tripIdRef.current = null
@@ -292,6 +298,19 @@ export default function TrackingPage() {
               label="TIME"
               value={`${Math.floor(elapsed / 60)} min`}
             />
+          </div>
+
+          <div style={{
+            background: '#fff', border: '1px solid #e8eaed', borderRadius: 14,
+            padding: '12px 16px', marginBottom: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <p style={{ margin: 0, fontSize: 11, color: '#9aa0a6', textTransform: 'uppercase', letterSpacing: '0.06em', flexShrink: 0, marginRight: 12 }}>Position</p>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#202124', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>
+              {position
+                ? `${Math.abs(position.lat).toFixed(4)}°${position.lat >= 0 ? 'N' : 'S'}   ${Math.abs(position.lng).toFixed(4)}°${position.lng >= 0 ? 'E' : 'W'}`
+                : '—'}
+            </p>
           </div>
 
           <div style={{

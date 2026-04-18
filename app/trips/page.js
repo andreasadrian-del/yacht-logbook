@@ -10,7 +10,7 @@ export default async function TripsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: trips, error } = await supabase
     .from('trips')
-    .select('id, started_at, ended_at, duration_seconds, distance_nm')
+    .select('id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng')
     .eq('user_id', user.id)
     .order('started_at', { ascending: false })
 

@@ -126,6 +126,11 @@ function TripRow({ trip, isLast, onDelete }) {
               {trip.ended_at ? formatDuration(trip.duration_seconds) : 'In progress'}
             </span>
           </div>
+          {(trip.last_lat != null && trip.last_lng != null) && (
+            <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9aa0a6', fontVariantNumeric: 'tabular-nums' }}>
+              {Math.abs(trip.last_lat).toFixed(4)}°{trip.last_lat >= 0 ? 'N' : 'S'}&nbsp;&nbsp;{Math.abs(trip.last_lng).toFixed(4)}°{trip.last_lng >= 0 ? 'E' : 'W'}
+            </p>
+          )}
         </div>
         <svg width="8" height="13" viewBox="0 0 8 13" fill="none">
           <path d="M1 1l6 5.5L1 12" stroke="#c7c7cc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
