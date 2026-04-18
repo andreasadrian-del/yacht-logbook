@@ -1,14 +1,12 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
-import SignOutButton from '@/app/SignOutButton'
+import BottomNav from '@/app/BottomNav'
 
-// Always fetch live data — never statically build this page
 export const dynamic = 'force-dynamic'
 
 function formatDate(isoString) {
   return new Date(isoString).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
   })
 }
 
@@ -16,8 +14,7 @@ function formatDuration(seconds) {
   if (!seconds) return '—'
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0) return `${h}h ${m}m`
-  return `${m}m`
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
 export default async function TripsPage() {
@@ -25,73 +22,79 @@ export default async function TripsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   const { data: trips, error } = await supabase
     .from('trips')
-    .select('id, started_at, ended_at, duration_seconds')
+    .select('id, started_at, ended_at, duration_seconds, distance_nm')
     .eq('user_id', user.id)
+    .not('ended_at', 'is', null)
     .order('started_at', { ascending: false })
 
   return (
-    <div className="min-h-screen bg-[#F2F2F7]">
-      {/* Nav bar */}
-      <header className="bg-[#F2F2F7]/80 backdrop-blur-xl sticky top-0 z-10 border-b border-black/[0.08]">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/" className="text-[#007AFF] text-[15px]">
-            ← Track
-          </Link>
-          <span className="font-semibold text-[17px]">All Trips</span>
-          <SignOutButton />
+    <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>
+
+      <header style={{ background: '#fff', borderBottom: '1px solid #e8eaed', flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center' }}>
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#202124', letterSpacing: '-0.3px' }}>All Trips</span>
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-6">
-        {error && (
-          <div className="bg-white rounded-2xl px-4 py-4 text-[#FF3B30] text-[15px]">
-            Error loading trips: {error.message}
-          </div>
-        )}
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        <div style={{ maxWidth: 520, margin: '0 auto', padding: '20px 16px 24px' }}>
 
-        {!error && trips?.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-5xl mb-4">🗺️</p>
-            <p className="text-[17px] font-semibold text-black mb-1">No trips yet</p>
-            <p className="text-[15px] text-[#8E8E93] mb-6">Start tracking from the main screen.</p>
-            <Link href="/" className="text-[#007AFF] text-[17px]">Start a trip</Link>
-          </div>
-        )}
+          {error && (
+            <div style={{ background: '#fce8e6', borderRadius: 10, padding: '12px 16px', color: '#ea4335', fontSize: 14 }}>
+              Error loading trips.
+            </div>
+          )}
 
-        {trips && trips.length > 0 && (
-          <>
-            <p className="text-[13px] font-medium text-[#6C6C70] uppercase tracking-wide px-4 mb-2">
-              {trips.length} {trips.length === 1 ? 'Trip' : 'Trips'}
-            </p>
-            <div className="bg-white rounded-2xl overflow-hidden divide-y divide-black/[0.08]">
-              {trips.map((trip) => (
-                <Link key={trip.id} href={`/trips/${trip.id}`} className="block px-4 py-4 active:bg-black/[0.04] transition-colors">
-                  <div className="flex items-start justify-between">
+          {!error && trips?.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <p style={{ fontSize: 48, margin: '0 0 12px' }}>🗺️</p>
+              <p style={{ fontSize: 17, fontWeight: 600, color: '#202124', margin: '0 0 6px' }}>No trips yet</p>
+              <p style={{ fontSize: 14, color: '#5f6368', margin: 0 }}>Start tracking from the Tracking tab.</p>
+            </div>
+          )}
+
+          {trips && trips.length > 0 && (
+            <>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
+                {trips.length} {trips.length === 1 ? 'Trip' : 'Trips'}
+              </p>
+              <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                {trips.map((trip, i) => (
+                  <Link
+                    key={trip.id}
+                    href={`/trips/${trip.id}`}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '14px 16px', textDecoration: 'none',
+                      borderTop: i > 0 ? '1px solid #f1f3f4' : 'none',
+                    }}
+                  >
                     <div>
-                      <p className="text-[17px] font-semibold text-black">
+                      <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#202124' }}>
                         {formatDate(trip.started_at)}
                       </p>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[13px] text-[#8E8E93]">
-                          Duration: {formatDuration(trip.duration_seconds)}
+                      <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                        <span style={{ fontSize: 13, color: '#5f6368' }}>
+                          {trip.distance_nm != null ? `${trip.distance_nm.toFixed(1)} NM` : '— NM'}
                         </span>
-                        {!trip.ended_at && (
-                          <span className="text-[12px] font-medium text-[#FF9500] bg-orange-50 rounded-full px-2 py-0.5">
-                            In progress
-                          </span>
-                        )}
+                        <span style={{ fontSize: 13, color: '#5f6368' }}>
+                          {formatDuration(trip.duration_seconds)}
+                        </span>
                       </div>
                     </div>
-                    <svg width="8" height="13" viewBox="0 0 8 13" fill="none" className="mt-1.5">
-                      <path d="M1 1l6 5.5L1 12" stroke="#C7C7CC" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg width="8" height="13" viewBox="0 0 8 13" fill="none">
+                      <path d="M1 1l6 5.5L1 12" stroke="#c7c7cc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </>
-        )}
-      </main>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+
+        </div>
+      </div>
+
+      <BottomNav />
     </div>
   )
 }
