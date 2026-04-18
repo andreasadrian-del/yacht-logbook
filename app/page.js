@@ -201,17 +201,14 @@ export default function TrackingPage() {
             </div>
           )}
 
-          <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <p style={{ margin: 0, fontSize: 48, fontWeight: 300, color: tracking ? '#202124' : '#dadce0', letterSpacing: '-1px', fontVariantNumeric: 'tabular-nums' }}>
-              {String(Math.floor(elapsed / 3600)).padStart(2, '0')}:{String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0')}:{String(elapsed % 60).padStart(2, '0')}
-            </p>
-            {tracking && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, fontSize: 12, fontWeight: 500, color: '#ea4335', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          {tracking && (
+            <div style={{ textAlign: 'center', marginBottom: 12 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 500, color: '#ea4335', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ea4335', display: 'inline-block' }} />
                 Recording
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
             <StatCard
