@@ -13,14 +13,17 @@ export default function LiveMap({ trackPoints, currentPosition }) {
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return
 
-    import('leaflet').then(({ default: L }) => {
-      const map = L.map(containerRef.current, { zoomControl: false, attributionControl: false })
+    Promise.all([
+      import('leaflet'),
+      import('leaflet-gesture-handling'),
+      import('leaflet-gesture-handling/dist/leaflet-gesture-handling.css'),
+    ]).then(([{ default: L }]) => {
+      const map = L.map(containerRef.current, { zoomControl: false, attributionControl: false, gestureHandling: true })
       mapRef.current = map
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map)
       L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', { maxZoom: 18, opacity: 0.8 }).addTo(map)
 
-      // Start with a default world view — will zoom in once GPS locks
       map.setView([48, 10], 4)
 
       // Empty polyline — will be updated as points come in

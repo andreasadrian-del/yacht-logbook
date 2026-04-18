@@ -18,8 +18,12 @@ export default function TripMap({ points, entries = [] }) {
   useEffect(() => {
     if (mapRef.current || !containerRef.current || points.length === 0) return
 
-    import('leaflet').then(({ default: L }) => {
-      const map = L.map(containerRef.current, { zoomControl: true })
+    Promise.all([
+      import('leaflet'),
+      import('leaflet-gesture-handling'),
+      import('leaflet-gesture-handling/dist/leaflet-gesture-handling.css'),
+    ]).then(([{ default: L }]) => {
+      const map = L.map(containerRef.current, { zoomControl: true, gestureHandling: true })
       mapRef.current = map
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
