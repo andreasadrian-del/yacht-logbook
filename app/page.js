@@ -156,12 +156,13 @@ export default function TrackingPage() {
     startWatching()
   }, [isTracking, tripId, tripStartTime, startWatching])
 
-  // Correct elapsed time after screen lock/unlock (intervals pause when backgrounded)
+  // On screen unlock: correct elapsed display and force-record the next GPS fix immediately
   useEffect(() => {
     if (!isTracking) return
     const handleVisibility = () => {
       if (document.visibilityState === 'visible' && startTimeRef.current) {
         setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000))
+        lastRecordedRef.current = 0 // skip throttle so next GPS update is saved
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)

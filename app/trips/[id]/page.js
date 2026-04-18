@@ -4,8 +4,55 @@ import TripDetailView from './TripDetailView'
 
 export const dynamic = 'force-dynamic'
 
+function haversineNm(lat1, lon1, lat2, lon2) {
+  const R = 3440.065
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function bearingDeg(lat1, lon1, lat2, lon2) {
+  const toRad = d => d * Math.PI / 180
+  const dLon = toRad(lon2 - lon1)
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2))
+  const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon)
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360
+}
+
+// Enrich track points with calculated COG/SOG from consecutive positions.
+// GPS-provided speed/heading are unreliable on iOS (often null), so we
+// derive them from geometry and fall back to stored values only when needed.
+function enrichPoints(points) {
+  return points.map((p, i) => {
+    if (i === 0) return { ...p, calcCog: p.course, calcSog: p.speed }
+    const prev = points[i - 1]
+    const dtHours = (new Date(p.recorded_at) - new Date(prev.recorded_at)) / 3_600_000
+    const distNm = haversineNm(
+      parseFloat(prev.lat), parseFloat(prev.lng),
+      parseFloat(p.lat), parseFloat(p.lng),
+    )
+    const calcCog = bearingDeg(
+      parseFloat(prev.lat), parseFloat(prev.lng),
+      parseFloat(p.lat), parseFloat(p.lng),
+    )
+    const calcSog = dtHours > 0 ? Math.round((distNm / dtHours) * 10) / 10 : null
+    return {
+      ...p,
+      calcCog: p.course ?? Math.round(calcCog),
+      calcSog: p.speed ?? calcSog,
+    }
+  })
+}
+
 function generateTimeline(trip, points, entries) {
   if (!trip?.started_at || !points?.length) return []
+
+  const enriched = enrichPoints(points)
 
   const start = new Date(trip.started_at)
   const end = trip.ended_at ? new Date(trip.ended_at) : new Date()
@@ -21,9 +68,9 @@ function generateTimeline(trip, points, entries) {
   while (current <= end) {
     const windowEnd = new Date(current.getTime() + 5 * 60 * 1000)
 
-    // Closest track point within 5 minutes of this interval
+    // Closest enriched point within 5 minutes of this interval
     let closest = null, minDiff = Infinity
-    for (const p of points) {
+    for (const p of enriched) {
       const diff = Math.abs(new Date(p.recorded_at).getTime() - current.getTime())
       if (diff < minDiff) { minDiff = diff; closest = p }
     }
@@ -37,8 +84,8 @@ function generateTimeline(trip, points, entries) {
 
     intervals.push({
       time: current.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-      cog: point?.course ?? null,
-      sog: point?.speed ?? null,
+      cog: point?.calcCog ?? null,
+      sog: point?.calcSog ?? null,
       entries: windowEntries,
     })
 
