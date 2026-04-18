@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import LiveMap from './LiveMap'
+import WayLogIcon from './WayLogIcon'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -120,6 +121,8 @@ function BottomNav() {
 // ── main page ─────────────────────────────────────────────────────────────────
 
 export default function TrackingPage() {
+  const [splash, setSplash] = useState(true)
+  const [splashFading, setSplashFading] = useState(false)
   const [isTracking, setIsTracking] = useState(false)
   const [position, setPosition] = useState(null)
   const [trackPoints, setTrackPoints] = useState([])
@@ -138,6 +141,12 @@ export default function TrackingPage() {
   const lastPositionRef = useRef(null)
   const distanceRef = useRef(0)
   const pointCountRef = useRef(0)
+
+  useEffect(() => {
+    const fadeTimer = setTimeout(() => setSplashFading(true), 800)
+    const hideTimer = setTimeout(() => setSplash(false), 1200)
+    return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer) }
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -213,10 +222,25 @@ export default function TrackingPage() {
   return (
     <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>
 
+      {/* Splash screen */}
+      {splash && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: '#fff',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          opacity: splashFading ? 0 : 1,
+          transition: 'opacity 0.4s ease',
+          pointerEvents: 'none',
+        }}>
+          <WayLogIcon size={110} showText instanceId="splash" />
+        </div>
+      )}
+
       {/* Header */}
       <header style={{ background: '#fff', borderBottom: '1px solid #e8eaed', flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center' }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: '#202124', letterSpacing: '-0.3px' }}>Yacht Logbook</span>
+        <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <WayLogIcon size={28} instanceId="header" />
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#202124', letterSpacing: '-0.3px' }}>Way Log</span>
         </div>
       </header>
 
