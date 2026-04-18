@@ -24,12 +24,12 @@ export default function LiveMap({ trackPoints, currentPosition }) {
       map.setView([48, 10], 4)
 
       // Empty polyline — will be updated as points come in
-      polylineRef.current = L.polyline([], { color: '#007AFF', weight: 4, opacity: 0.9 }).addTo(map)
+      polylineRef.current = L.polyline([], { color: '#1a73e8', weight: 4, opacity: 0.9 }).addTo(map)
 
-      // Current position marker (pulsing blue dot)
+      // Current position marker
       positionMarkerRef.current = L.circleMarker([0, 0], {
         radius: 8,
-        fillColor: '#007AFF',
+        fillColor: '#1a73e8',
         color: 'white',
         weight: 2.5,
         fillOpacity: 1,
