@@ -132,8 +132,41 @@ export default function TrackingPage() {
     startTimeRef.current = tripStartTime || Date.now()
     setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000))
     lastRecordedRef.current = 0
+
+    // Reload existing track points so the polyline is fully drawn
+    supabase
+      .from('track_points')
+      .select('lat, lng')
+      .eq('trip_id', tripId)
+      .order('recorded_at')
+      .then(({ data }) => {
+        if (!data?.length) return
+        const pts = data.map(p => ({ lat: parseFloat(p.lat), lng: parseFloat(p.lng) }))
+        setTrackPoints(pts)
+        const last = pts[pts.length - 1]
+        lastPositionRef.current = { lat: last.lat, lng: last.lng }
+        let dist = 0
+        for (let i = 1; i < pts.length; i++) {
+          dist += haversineNm(pts[i - 1].lat, pts[i - 1].lng, pts[i].lat, pts[i].lng)
+        }
+        distanceRef.current = dist
+        setDistanceNm(Math.round(dist * 100) / 100)
+      })
+
     startWatching()
   }, [isTracking, tripId, tripStartTime, startWatching])
+
+  // Correct elapsed time after screen lock/unlock (intervals pause when backgrounded)
+  useEffect(() => {
+    if (!isTracking) return
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && startTimeRef.current) {
+        setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000))
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [isTracking])
 
   const startTripHandler = async () => {
     if (!navigator.geolocation) { setStatus('error'); setStatusMsg('GPS not available.'); return }

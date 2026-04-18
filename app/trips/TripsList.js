@@ -107,15 +107,23 @@ function TripRow({ trip, isLast, onDelete }) {
         }}
       >
         <div>
-          <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#202124' }}>
-            {formatDate(trip.started_at)}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#202124' }}>
+              {formatDate(trip.started_at)}
+            </p>
+            {!trip.ended_at && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#ea4335', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ea4335', display: 'inline-block' }} />
+                Recording
+              </span>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
             <span style={{ fontSize: 13, color: '#5f6368' }}>
               {trip.distance_nm != null ? `${trip.distance_nm.toFixed(1)} NM` : '— NM'}
             </span>
             <span style={{ fontSize: 13, color: '#5f6368' }}>
-              {formatDuration(trip.duration_seconds)}
+              {trip.ended_at ? formatDuration(trip.duration_seconds) : 'In progress'}
             </span>
           </div>
         </div>

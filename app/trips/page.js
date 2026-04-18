@@ -12,7 +12,6 @@ export default async function TripsPage() {
     .from('trips')
     .select('id, started_at, ended_at, duration_seconds, distance_nm')
     .eq('user_id', user.id)
-    .not('ended_at', 'is', null)
     .order('started_at', { ascending: false })
 
   return (
