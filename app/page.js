@@ -76,6 +76,21 @@ export default function TrackingPage() {
     return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer) }
   }, [])
 
+  // Get a position fix on open so the map zooms in immediately, even without an active trip
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords
+        localStorage.setItem('lastLat', latitude)
+        localStorage.setItem('lastLng', longitude)
+        setPosition(prev => prev ?? { lat: latitude, lng: longitude, speed: null, course: null, accuracy: pos.coords.accuracy })
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    )
+  }, [])
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
