@@ -139,6 +139,7 @@ export default function TrackingPage() {
   const tripIdRef = useRef(null)
   const startTimeRef = useRef(null)
   const lastPositionRef = useRef(null)
+  const lastRecordedRef = useRef(0)
   const distanceRef = useRef(0)
   const pointCountRef = useRef(0)
 
@@ -178,11 +179,11 @@ export default function TrackingPage() {
     tripIdRef.current = data.id
     startTimeRef.current = Date.now()
     lastPositionRef.current = null
-    distanceRef.current = 0; pointCountRef.current = 0; pendingPointsRef.current = []
+    distanceRef.current = 0; pointCountRef.current = 0; pendingPointsRef.current = []; lastRecordedRef.current = 0
     setDistanceNm(0); setPointCount(0); setElapsed(0); setPosition(null); setTrackPoints([])
 
     timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000)), 1000)
-    uploadIntervalRef.current = setInterval(uploadPending, 15000)
+    uploadIntervalRef.current = setInterval(uploadPending, 30000)
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
@@ -190,6 +191,15 @@ export default function TrackingPage() {
         if (accuracy > 50) return
 
         const speedKnots = speed != null ? speed * 1.94384 : null
+
+        // Always update live display
+        setPosition({ lat: latitude, lng: longitude, speed: speedKnots, course: heading, accuracy })
+
+        // Record a point at most once every 30 seconds
+        const now = Date.now()
+        if (now - lastRecordedRef.current < 30000) return
+        lastRecordedRef.current = now
+
         const point = { lat: latitude, lng: longitude, speed: speedKnots != null ? Math.round(speedKnots * 10) / 10 : null, course: heading != null ? Math.round(heading) : null, timestamp: new Date(pos.timestamp).toISOString() }
 
         pendingPointsRef.current.push(point)
@@ -202,7 +212,6 @@ export default function TrackingPage() {
           setDistanceNm(Math.round(distanceRef.current * 100) / 100)
         }
         lastPositionRef.current = { lat: latitude, lng: longitude }
-        setPosition({ lat: latitude, lng: longitude, speed: speedKnots, course: heading, accuracy })
       },
       (err) => { setStatus('error'); setStatusMsg('GPS error: ' + err.message) },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
