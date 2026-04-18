@@ -50,7 +50,7 @@ function enrichPoints(points) {
 }
 
 function generateTimeline(trip, points, entries) {
-  if (!trip?.started_at || !points?.length) return []
+  if (!trip?.started_at) return []
 
   const enriched = enrichPoints(points)
 
