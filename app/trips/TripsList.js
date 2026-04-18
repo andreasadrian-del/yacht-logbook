@@ -143,8 +143,14 @@ function TripRow({ trip, isLast, onDelete }) {
 export default function TripsList({ initialTrips }) {
   const [trips, setTrips] = useState(initialTrips)
   const [confirmTrip, setConfirmTrip] = useState(null)
+  const [warnTrip, setWarnTrip] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const router = useRouter()
+
+  function handleDeleteRequest(trip) {
+    if (!trip.ended_at) { setWarnTrip(trip); return }
+    setConfirmTrip(trip)
+  }
 
   async function confirmDelete() {
     if (!confirmTrip) return
@@ -176,10 +182,42 @@ export default function TripsList({ initialTrips }) {
       <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
         {trips.map((trip, i) => (
           <div key={trip.id} style={{ borderTop: i > 0 ? '1px solid #f1f3f4' : 'none' }}>
-            <TripRow trip={trip} isLast={i === 0} onDelete={setConfirmTrip} />
+            <TripRow trip={trip} isLast={i === 0} onDelete={handleDeleteRequest} />
           </div>
         ))}
       </div>
+
+      {/* Warning modal — live trip cannot be deleted */}
+      {warnTrip && (
+        <div
+          onClick={() => setWarnTrip(null)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 320, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
+          >
+            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>
+              Trip Still Recording
+            </p>
+            <p style={{ margin: '0 0 24px', fontSize: 14, color: '#5f6368', textAlign: 'center', lineHeight: 1.5 }}>
+              This trip is currently active. Stop the trip on the Tracking tab before deleting it.
+            </p>
+            <button
+              onClick={() => setWarnTrip(null)}
+              style={{
+                width: '100%', padding: '13px 0', borderRadius: 12, border: 'none',
+                background: '#1a73e8', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation modal */}
       {confirmTrip && (
