@@ -82,15 +82,7 @@ export default function TripDetailView({ trip, intervals, points, entries, initi
             <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Notes
             </p>
-            {notes.map(note => (
-              <div key={note.id} style={{ marginBottom: 8, padding: '8px 12px', background: '#f8f9fa', borderRadius: 10, fontSize: 14, color: '#202124', lineHeight: 1.5 }}>
-                <span style={{ display: 'block', fontSize: 11, color: '#9aa0a6', marginBottom: 3 }}>
-                  {new Date(note.created_at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                </span>
-                {note.content}
-              </div>
-            ))}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: notes.length > 0 ? 10 : 14 }}>
               <textarea
                 value={newNote}
                 onChange={e => setNewNote(e.target.value)}
@@ -116,6 +108,15 @@ export default function TripDetailView({ trip, intervals, points, entries, initi
                 {savingNote ? '…' : 'Save'}
               </button>
             </div>
+            {notes.map(note => (
+              <div key={note.id} style={{ marginBottom: 8, padding: '8px 12px', background: '#f8f9fa', borderRadius: 10, fontSize: 14, color: '#202124', lineHeight: 1.5 }}>
+                <span style={{ display: 'block', fontSize: 11, color: '#9aa0a6', marginBottom: 3 }}>
+                  {new Date(note.created_at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </span>
+                {note.content}
+              </div>
+            ))}
+            {notes.length > 0 && <div style={{ height: 6 }} />}
           </div>
 
           {intervals.length === 0 ? (
