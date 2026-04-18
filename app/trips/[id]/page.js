@@ -30,52 +30,48 @@ export default async function TripDetailPage({ params }) {
       .order('recorded_at', { ascending: true }),
   ])
 
+  const hasPoints = points && points.length > 0
+
   return (
-    <div className="min-h-screen bg-[#0a1628] flex flex-col">
+    <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#0a1628' }}>
       {/* Nav bar */}
-      <header className="bg-[#0a1628]/90 backdrop-blur-xl border-b border-white/10 shrink-0">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/trips" className="text-[#007AFF] text-[15px]">
+      <header style={{ background: '#0a1628', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+        <div style={{ maxWidth: 672, margin: '0 auto', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/trips" style={{ color: '#007AFF', fontSize: 15, textDecoration: 'none' }}>
             ← Trips
           </Link>
-          <span className="font-semibold text-[17px] text-white">Trip Track</span>
-          <div className="w-16" />
+          <span style={{ color: 'white', fontWeight: 600, fontSize: 17 }}>Trip Track</span>
+          <div style={{ width: 64 }} />
         </div>
       </header>
 
       {/* Trip info bar */}
       {trip && (
-        <div className="bg-[#0f2040] border-b border-white/10 shrink-0">
-          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-6">
+        <div style={{ background: '#0f2040', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+          <div style={{ maxWidth: 672, margin: '0 auto', padding: '12px 16px', display: 'flex', gap: 24 }}>
             <div>
-              <p className="text-[11px] text-white/40 uppercase tracking-wide">Started</p>
-              <p className="text-[13px] text-white font-medium">{formatDate(trip.started_at)}</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Started</p>
+              <p style={{ fontSize: 13, color: 'white', fontWeight: 500, margin: '2px 0 0' }}>{formatDate(trip.started_at)}</p>
             </div>
             <div>
-              <p className="text-[11px] text-white/40 uppercase tracking-wide">Duration</p>
-              <p className="text-[13px] text-white font-medium">{formatDuration(trip.duration_seconds)}</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Duration</p>
+              <p style={{ fontSize: 13, color: 'white', fontWeight: 500, margin: '2px 0 0' }}>{formatDuration(trip.duration_seconds)}</p>
             </div>
             <div>
-              <p className="text-[11px] text-white/40 uppercase tracking-wide">Points</p>
-              <p className="text-[13px] text-white font-medium">{points?.length ?? 0}</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Points</p>
+              <p style={{ fontSize: 13, color: 'white', fontWeight: 500, margin: '2px 0 0' }}>{points?.length ?? 0}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Map */}
-      <div className="flex-1 relative" style={{ minHeight: '60svh' }}>
-        {/* Leaflet CSS */}
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        />
-
-        {!points || points.length === 0 ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-white/40">
-            <p className="text-5xl mb-4">🗺️</p>
-            <p className="text-[17px] font-semibold text-white/60">No track points recorded</p>
-            <p className="text-[13px] mt-1">GPS points are uploaded every 15 seconds while tracking.</p>
+      {/* Map — takes all remaining space */}
+      <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+        {!hasPoints ? (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)' }}>
+            <p style={{ fontSize: 48, margin: '0 0 12px' }}>🗺️</p>
+            <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.6)', fontWeight: 600, margin: 0 }}>No track points recorded</p>
+            <p style={{ fontSize: 13, margin: '4px 0 0' }}>GPS points upload every 15 seconds while tracking.</p>
           </div>
         ) : (
           <TripMap points={points} />
@@ -83,20 +79,20 @@ export default async function TripDetailPage({ params }) {
       </div>
 
       {/* Legend */}
-      {points && points.length > 0 && (
-        <div className="bg-[#0f2040] border-t border-white/10 shrink-0">
-          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-5">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#34C759] border-2 border-white/60" />
-              <span className="text-[12px] text-white/60">Start</span>
+      {hasPoints && (
+        <div style={{ background: '#0f2040', borderTop: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+          <div style={{ maxWidth: 672, margin: '0 auto', padding: '10px 16px', display: 'flex', gap: 20, alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#34C759', border: '2px solid rgba(255,255,255,0.6)' }} />
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Start</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#FF3B30] border-2 border-white/60" />
-              <span className="text-[12px] text-white/60">End</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FF3B30', border: '2px solid rgba(255,255,255,0.6)' }} />
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>End</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-0.5 bg-[#007AFF]" />
-              <span className="text-[12px] text-white/60">Track</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 28, height: 3, background: '#007AFF', borderRadius: 2 }} />
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Track</span>
             </div>
           </div>
         </div>
