@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
+    "prebuild": "node -e \"const fs=require('fs');let c=fs.readFileSync('public/sw.js','utf8');c=c.replace(/logbook-nadira-[^']+/g,'logbook-nadira-'+Date.now());fs.writeFileSync('public/sw.js',c);\"",
     "build": "next build",
     "start": "next start"
   },

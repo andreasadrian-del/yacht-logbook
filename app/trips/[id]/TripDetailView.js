@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import TripMap from './TripMap'
+import { supabase } from '@/lib/supabase'
 
 const EVENT_LABELS = { tack: 'Tack', jibe: 'Jibe', reef: 'Reef', unreef: 'Unreef', 'engine on': 'Engine On', 'engine off': 'Engine Off' }
 
@@ -31,10 +32,29 @@ function EventPill({ entry, onCommentClick }) {
   )
 }
 
-export default function TripDetailView({ trip, intervals, points, entries }) {
+export default function TripDetailView({ trip, intervals, points, entries, initialNotes }) {
   const [activeComment, setActiveComment] = useState(null)
+  const [notes, setNotes] = useState(initialNotes ?? [])
+  const [newNote, setNewNote] = useState('')
+  const [savingNote, setSavingNote] = useState(false)
 
   const hasPoints = points && points.length > 0
+
+  async function saveNote() {
+    const content = newNote.trim()
+    if (!content) return
+    setSavingNote(true)
+    const { data, error } = await supabase
+      .from('trip_notes')
+      .insert({ trip_id: trip.id, content })
+      .select()
+      .single()
+    if (!error && data) {
+      setNotes(prev => [...prev, data])
+      setNewNote('')
+    }
+    setSavingNote(false)
+  }
 
   return (
     <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>
@@ -54,8 +74,50 @@ export default function TripDetailView({ trip, intervals, points, entries }) {
       {/* Split body */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-        {/* TOP HALF — Timeline */}
+        {/* TOP HALF — Notes + Timeline */}
         <div style={{ flex: 1, overflowY: 'auto', background: '#fff', minHeight: 0 }}>
+
+          {/* Notes section */}
+          <div style={{ padding: '14px 16px 0', borderBottom: '1px solid #e8eaed' }}>
+            <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Notes
+            </p>
+            {notes.map(note => (
+              <div key={note.id} style={{ marginBottom: 8, padding: '8px 12px', background: '#f8f9fa', borderRadius: 10, fontSize: 14, color: '#202124', lineHeight: 1.5 }}>
+                <span style={{ display: 'block', fontSize: 11, color: '#9aa0a6', marginBottom: 3 }}>
+                  {new Date(note.created_at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </span>
+                {note.content}
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+              <textarea
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
+                placeholder="Add a note…"
+                rows={2}
+                style={{
+                  flex: 1, borderRadius: 10, border: '1px solid #e8eaed', padding: '8px 10px',
+                  fontSize: 14, resize: 'none', fontFamily: 'inherit', color: '#202124',
+                  outline: 'none',
+                }}
+              />
+              <button
+                onClick={saveNote}
+                disabled={savingNote || !newNote.trim()}
+                style={{
+                  padding: '0 16px', borderRadius: 10, border: 'none',
+                  background: savingNote || !newNote.trim() ? '#dadce0' : '#1a73e8',
+                  color: savingNote || !newNote.trim() ? '#9aa0a6' : '#fff',
+                  fontSize: 13, fontWeight: 600, cursor: savingNote || !newNote.trim() ? 'default' : 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                {savingNote ? '…' : 'Save'}
+              </button>
+            </div>
+          </div>
+
           {intervals.length === 0 ? (
             <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9aa0a6', fontSize: 14 }}>
               No track data recorded.
@@ -94,6 +156,7 @@ export default function TripDetailView({ trip, intervals, points, entries }) {
               </tbody>
             </table>
           )}
+
         </div>
 
         {/* BOTTOM HALF — Map */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import BottomNav from '@/app/BottomNav'
 import WayLogIcon from '@/app/WayLogIcon'
@@ -10,16 +10,25 @@ export default function TripsPage() {
   const [trips, setTrips] = useState(null)
   const [error, setError] = useState(false)
 
-  useEffect(() => {
-    supabase
+  const fetchTrips = useCallback(async () => {
+    const { data, error } = await supabase
       .from('trips')
       .select('id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng')
       .order('started_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setError(true)
-        else setTrips(data ?? [])
-      })
+    if (error) setError(true)
+    else setTrips(data ?? [])
   }, [])
+
+  useEffect(() => {
+    fetchTrips()
+
+    const channel = supabase
+      .channel('trips-list-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, fetchTrips)
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
+  }, [fetchTrips])
 
   return (
     <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>

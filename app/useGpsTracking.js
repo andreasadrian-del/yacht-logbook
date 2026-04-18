@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 
+const pendingKey = id => `pendingPoints_${id}`
+
 function haversineNm(lat1, lon1, lat2, lon2) {
   const R = 3440.065
   const dLat = (lat2 - lat1) * Math.PI / 180
@@ -64,7 +66,8 @@ export function useGpsTracking({ isTracking, tripId, tripStartTime, startTrip, e
     const { error } = await supabase.from('track_points').insert(
       batch.map(p => ({ trip_id: tripIdRef.current, recorded_at: p.timestamp, lat: p.lat, lng: p.lng, speed: p.speed, course: p.course }))
     )
-    if (error) { console.error('Upload error:', error.message); return }
+    if (error) { pendingPointsRef.current.unshift(...batch); console.error('Upload error:', error.message); return }
+    localStorage.removeItem(pendingKey(tripIdRef.current))
     const last = batch[batch.length - 1]
     await supabase.from('trips').update({ last_lat: last.lat, last_lng: last.lng }).eq('id', tripIdRef.current)
   }, [])
@@ -90,6 +93,7 @@ export function useGpsTracking({ isTracking, tripId, tripStartTime, startTrip, e
       timestamp: new Date(pos.timestamp).toISOString(),
     }
     pendingPointsRef.current.push(point)
+    if (tripIdRef.current) localStorage.setItem(pendingKey(tripIdRef.current), JSON.stringify(pendingPointsRef.current))
     setTrackPoints(prev => [...prev, { lat: latitude, lng: longitude }])
 
     if (lastPositionRef.current) {
@@ -121,6 +125,8 @@ export function useGpsTracking({ isTracking, tripId, tripStartTime, startTrip, e
     startTimeRef.current = tripStartTime || Date.now()
     setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000))
     lastRecordedRef.current = 0
+    const saved = localStorage.getItem(pendingKey(tripId))
+    if (saved) { try { pendingPointsRef.current = JSON.parse(saved) } catch (_) {} }
 
     supabase
       .from('track_points')

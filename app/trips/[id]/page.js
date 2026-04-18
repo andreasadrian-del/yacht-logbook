@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import TripDetailView from './TripDetailView'
+import TripLiveUpdater from './TripLiveUpdater'
 
 export const dynamic = 'force-dynamic'
 
@@ -99,10 +100,11 @@ export default async function TripDetailPage({ params }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: trip }, { data: points }, { data: entries }] = await Promise.all([
+  const [{ data: trip }, { data: points }, { data: entries }, { data: notes }] = await Promise.all([
     supabase.from('trips').select('*').eq('id', id).eq('user_id', user.id).single(),
     supabase.from('track_points').select('lat, lng, speed, course, recorded_at').eq('trip_id', id).order('recorded_at'),
     supabase.from('logbook_entries').select('*').eq('trip_id', id).order('recorded_at'),
+    supabase.from('trip_notes').select('*').eq('trip_id', id).order('created_at'),
   ])
 
   if (!trip) redirect('/trips')
@@ -110,11 +112,15 @@ export default async function TripDetailPage({ params }) {
   const intervals = generateTimeline(trip, points, entries)
 
   return (
-    <TripDetailView
-      trip={trip}
-      intervals={intervals}
-      points={points ?? []}
-      entries={entries ?? []}
-    />
+    <>
+      {!trip.ended_at && <TripLiveUpdater tripId={id} />}
+      <TripDetailView
+        trip={trip}
+        intervals={intervals}
+        points={points ?? []}
+        entries={entries ?? []}
+        initialNotes={notes ?? []}
+      />
+    </>
   )
 }

@@ -125,6 +125,11 @@ function TripRow({ trip, isLast, onDelete }) {
             <span style={{ fontSize: 13, color: '#5f6368' }}>
               {trip.ended_at ? formatDuration(trip.duration_seconds) : 'In progress'}
             </span>
+            {trip.distance_nm != null && trip.duration_seconds > 0 && (
+              <span style={{ fontSize: 13, color: '#5f6368' }}>
+                {(trip.distance_nm / (trip.duration_seconds / 3600)).toFixed(1)} kn avg
+              </span>
+            )}
           </div>
           {(trip.last_lat != null && trip.last_lng != null) && (
             <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9aa0a6', fontVariantNumeric: 'tabular-nums' }}>
