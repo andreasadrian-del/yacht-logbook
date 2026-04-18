@@ -55,6 +55,7 @@ export default function TripMap({ points, entries = [] }) {
         }).bindPopup(label.charAt(0).toUpperCase() + label.slice(1)).addTo(map)
       })
 
+      map.invalidateSize()
       map.fitBounds(polyline.getBounds(), { padding: [30, 30] })
     })
 

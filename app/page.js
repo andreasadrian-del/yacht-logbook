@@ -47,6 +47,12 @@ export default function TrackingPage() {
   const [splash, setSplash] = useState(true)
   const [splashFading, setSplashFading] = useState(false)
   const [position, setPosition] = useState(null)
+  const [initialMapCenter] = useState(() => {
+    if (typeof window === 'undefined') return null
+    const lat = parseFloat(localStorage.getItem('lastLat'))
+    const lng = parseFloat(localStorage.getItem('lastLng'))
+    return isNaN(lat) || isNaN(lng) ? null : { lat, lng }
+  })
   const [trackPoints, setTrackPoints] = useState([])
   const [elapsed, setElapsed] = useState(0)
   const [distanceNm, setDistanceNm] = useState(0)
@@ -98,6 +104,8 @@ export default function TrackingPage() {
     const speedKnots = speed != null ? speed * 1.94384 : null
     setPosition({ lat: latitude, lng: longitude, speed: speedKnots, course: heading, accuracy })
     setCurrentPosition({ lat: latitude, lng: longitude })
+    localStorage.setItem('lastLat', latitude)
+    localStorage.setItem('lastLng', longitude)
 
     const now = Date.now()
     if (now - lastRecordedRef.current < 30000) return
@@ -318,7 +326,7 @@ export default function TrackingPage() {
             border: '1px solid #e8eaed', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             marginBottom: 20, background: '#e8f0fe',
           }}>
-            <LiveMap trackPoints={trackPoints} currentPosition={position} />
+            <LiveMap trackPoints={trackPoints} currentPosition={position} initialCenter={initialMapCenter} />
             {position && (
               <div style={{
                 position: 'absolute', bottom: 10, right: 10, zIndex: 1000,

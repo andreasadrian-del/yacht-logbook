@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import 'leaflet/dist/leaflet.css'
 
-export default function LiveMap({ trackPoints, currentPosition }) {
+export default function LiveMap({ trackPoints, currentPosition, initialCenter }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const polylineRef = useRef(null)
@@ -22,7 +22,10 @@ export default function LiveMap({ trackPoints, currentPosition }) {
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map)
       L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', { maxZoom: 18, opacity: 0.8 }).addTo(map)
 
-      map.setView([48, 10], 4)
+      map.setView(
+        initialCenter ? [initialCenter.lat, initialCenter.lng] : [48, 10],
+        initialCenter ? 14 : 4
+      )
 
       // Empty polyline — will be updated as points come in
       polylineRef.current = L.polyline([], { color: '#1a73e8', weight: 4, opacity: 0.9 }).addTo(map)
