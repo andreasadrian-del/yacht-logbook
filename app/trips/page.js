@@ -8,27 +8,32 @@ import TripsList from './TripsList'
 
 export default function TripsPage() {
   const [trips, setTrips] = useState(null)
+  const [legs, setLegs] = useState(null)
   const [error, setError] = useState(false)
 
-  const fetchTrips = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('trips')
-      .select('id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng')
-      .order('started_at', { ascending: false })
-    if (error) setError(true)
-    else setTrips(data ?? [])
+  const fetchAll = useCallback(async () => {
+    const [tripsRes, legsRes] = await Promise.all([
+      supabase.from('trips').select('*').order('start_date', { ascending: false }),
+      supabase.from('legs').select('id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng').order('started_at', { ascending: false }),
+    ])
+    if (tripsRes.error || legsRes.error) { setError(true); return }
+    setTrips(tripsRes.data ?? [])
+    setLegs(legsRes.data ?? [])
   }, [])
 
   useEffect(() => {
-    fetchTrips()
+    fetchAll()
 
     const channel = supabase
-      .channel('trips-list-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, fetchTrips)
+      .channel('trips-page-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'legs' }, fetchAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, fetchAll)
       .subscribe()
 
     return () => supabase.removeChannel(channel)
-  }, [fetchTrips])
+  }, [fetchAll])
+
+  const loading = trips === null || legs === null
 
   return (
     <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>
@@ -49,13 +54,15 @@ export default function TripsPage() {
             </div>
           )}
 
-          {!error && trips === null && (
+          {!error && loading && (
             <div style={{ textAlign: 'center', padding: '60px 0', color: '#9aa0a6', fontSize: 14 }}>
               Loading…
             </div>
           )}
 
-          {!error && trips !== null && <TripsList initialTrips={trips} />}
+          {!error && !loading && (
+            <TripsList trips={trips} legs={legs} onRefresh={fetchAll} />
+          )}
 
         </div>
       </div>

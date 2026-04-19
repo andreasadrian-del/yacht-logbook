@@ -1,0 +1,200 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import LegMap from './LegMap'
+import { supabase } from '@/lib/supabase'
+
+const EVENT_LABELS = { tack: 'Tack', jibe: 'Jibe', reef: 'Reef', unreef: 'Unreef', 'engine on': 'Engine On', 'engine off': 'Engine Off' }
+
+function EventPill({ entry, onCommentClick }) {
+  if (entry.event_type === 'comment') {
+    return (
+      <button
+        onClick={() => onCommentClick(entry.comment)}
+        style={{
+          background: '#f3e8ff', color: '#7c3aed', border: 'none', borderRadius: 20,
+          padding: '2px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 3,
+        }}
+      >
+        💬
+      </button>
+    )
+  }
+  return (
+    <span style={{
+      background: '#e8f0fe', color: '#1a73e8', borderRadius: 20,
+      padding: '2px 8px', fontSize: 11, fontWeight: 600,
+    }}>
+      {EVENT_LABELS[entry.event_type] ?? entry.event_type}
+    </span>
+  )
+}
+
+export default function LegDetailView({ leg, intervals, points, entries, initialNotes, backHref }) {
+  const [activeComment, setActiveComment] = useState(null)
+  const [notes, setNotes] = useState(initialNotes ?? [])
+  const [newNote, setNewNote] = useState('')
+  const [savingNote, setSavingNote] = useState(false)
+
+  const hasPoints = points && points.length > 0
+
+  async function saveNote() {
+    const content = newNote.trim()
+    if (!content) return
+    setSavingNote(true)
+    const { data, error } = await supabase
+      .from('trip_notes')
+      .insert({ trip_id: leg.id, content })
+      .select()
+      .single()
+    if (!error && data) {
+      setNotes(prev => [...prev, data])
+      setNewNote('')
+    }
+    setSavingNote(false)
+  }
+
+  return (
+    <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>
+
+      <header style={{ background: '#fff', borderBottom: '1px solid #e8eaed', flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px', height: 56, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Link href={backHref ?? '/trips'} style={{ color: '#1a73e8', fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>
+            ← Back
+          </Link>
+          <span style={{ fontSize: 17, fontWeight: 700, color: '#202124' }}>
+            {new Date(leg.started_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+          {!leg.ended_at && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#ea4335', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ea4335', display: 'inline-block' }} />
+              Recording
+            </span>
+          )}
+        </div>
+      </header>
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        <div style={{ flex: 1, overflowY: 'auto', background: '#fff', minHeight: 0 }}>
+
+          {/* Notes section */}
+          <div style={{ padding: '14px 16px 0', borderBottom: '1px solid #e8eaed' }}>
+            <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              Notes
+            </p>
+            <div style={{ display: 'flex', gap: 8, marginBottom: notes.length > 0 ? 10 : 14 }}>
+              <textarea
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
+                placeholder="Add a note…"
+                rows={2}
+                style={{
+                  flex: 1, borderRadius: 10, border: '1px solid #e8eaed', padding: '8px 10px',
+                  fontSize: 14, resize: 'none', fontFamily: 'inherit', color: '#202124', outline: 'none',
+                }}
+              />
+              <button
+                onClick={saveNote}
+                disabled={savingNote || !newNote.trim()}
+                style={{
+                  padding: '0 16px', borderRadius: 10, border: 'none',
+                  background: savingNote || !newNote.trim() ? '#dadce0' : '#1a73e8',
+                  color: savingNote || !newNote.trim() ? '#9aa0a6' : '#fff',
+                  fontSize: 13, fontWeight: 600, cursor: savingNote || !newNote.trim() ? 'default' : 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                {savingNote ? '…' : 'Save'}
+              </button>
+            </div>
+            {notes.map(note => (
+              <div key={note.id} style={{ marginBottom: 8, padding: '8px 12px', background: '#f8f9fa', borderRadius: 10, fontSize: 14, color: '#202124', lineHeight: 1.5 }}>
+                <span style={{ display: 'block', fontSize: 11, color: '#9aa0a6', marginBottom: 3 }}>
+                  {new Date(note.created_at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </span>
+                {note.content}
+              </div>
+            ))}
+            {notes.length > 0 && <div style={{ height: 6 }} />}
+          </div>
+
+          {intervals.length === 0 ? (
+            <div style={{ padding: '40px 20px', textAlign: 'center', color: '#9aa0a6', fontSize: 14 }}>
+              No track data recorded.
+            </div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: '#f8f9fa', borderBottom: '1px solid #e8eaed' }}>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#5f6368', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', width: 56 }}>Time</th>
+                  <th style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600, color: '#5f6368', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', width: 52 }}>COG</th>
+                  <th style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600, color: '#5f6368', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', width: 52 }}>SOG</th>
+                  <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#5f6368', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Events</th>
+                </tr>
+              </thead>
+              <tbody>
+                {intervals.map((row, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #f1f3f4' }}>
+                    <td style={{ padding: '9px 12px', color: '#202124', fontWeight: 500, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+                      {new Date(row.isoTime).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td style={{ padding: '9px 8px', color: '#5f6368', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                      {row.cog != null ? `${Math.round(row.cog)}°` : '—'}
+                    </td>
+                    <td style={{ padding: '9px 8px', color: '#5f6368', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                      {row.sog != null ? row.sog.toFixed(1) : '—'}
+                    </td>
+                    <td style={{ padding: '9px 12px' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {row.entries.map(entry => (
+                          <EventPill key={entry.id} entry={entry} onCommentClick={setActiveComment} />
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+        </div>
+
+        <div style={{ height: '45vh', flexShrink: 0, borderTop: '1px solid #e8eaed', position: 'relative', background: '#e8f0fe' }}>
+          {hasPoints ? (
+            <LegMap points={points} entries={entries} />
+          ) : (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9aa0a6', fontSize: 14 }}>
+              No track points recorded
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      {activeComment && (
+        <div
+          onClick={() => setActiveComment(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 20, padding: '24px 20px', maxWidth: 360, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
+          >
+            <p style={{ margin: '0 0 16px', fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Comment</p>
+            <p style={{ margin: '0 0 20px', fontSize: 15, color: '#202124', lineHeight: 1.5 }}>{activeComment}</p>
+            <button
+              onClick={() => setActiveComment(null)}
+              style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#1a73e8', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}

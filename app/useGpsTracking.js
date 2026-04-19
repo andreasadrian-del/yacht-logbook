@@ -69,7 +69,7 @@ export function useGpsTracking({ isTracking, tripId, tripStartTime, startTrip, e
     if (error) { pendingPointsRef.current.unshift(...batch); console.error('Upload error:', error.message); return }
     localStorage.removeItem(pendingKey(tripIdRef.current))
     const last = batch[batch.length - 1]
-    await supabase.from('trips').update({ last_lat: last.lat, last_lng: last.lng }).eq('id', tripIdRef.current)
+    await supabase.from('legs').update({ last_lat: last.lat, last_lng: last.lng }).eq('id', tripIdRef.current)
   }, [])
 
   const handleGpsUpdate = useCallback((pos) => {
@@ -166,16 +166,16 @@ export function useGpsTracking({ isTracking, tripId, tripStartTime, startTrip, e
 
   const startTripHandler = async () => {
     if (!navigator.geolocation) { setStatus('error'); setStatusMsg('GPS not available.'); return }
-    setStatus('uploading'); setStatusMsg('Creating trip…')
+    setStatus('uploading'); setStatusMsg('Creating leg…')
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setStatus('error'); setStatusMsg('Not signed in.'); return }
 
     const { data, error } = await supabase
-      .from('trips')
+      .from('legs')
       .insert({ started_at: new Date().toISOString(), user_id: user.id })
       .select('id').single()
-    if (error) { setStatus('error'); setStatusMsg('Could not create trip.'); return }
+    if (error) { setStatus('error'); setStatusMsg('Could not create leg.'); return }
 
     tripIdRef.current = data.id
     startTimeRef.current = Date.now()
@@ -195,9 +195,9 @@ export function useGpsTracking({ isTracking, tripId, tripStartTime, startTrip, e
     if (timerRef.current) clearInterval(timerRef.current)
     watchIdRef.current = null
     wakeLockRef.current?.release(); wakeLockRef.current = null
-    setStatus('uploading'); setStatusMsg('Saving trip…')
+    setStatus('uploading'); setStatusMsg('Saving leg…')
     await uploadPending()
-    await supabase.from('trips').update({
+    await supabase.from('legs').update({
       ended_at: new Date().toISOString(),
       duration_seconds: Math.floor((Date.now() - startTimeRef.current) / 1000),
       distance_nm: Math.round(distanceRef.current * 100) / 100,

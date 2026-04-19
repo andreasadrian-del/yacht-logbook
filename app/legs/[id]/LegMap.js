@@ -13,7 +13,7 @@ const EVENT_COLORS = {
   comment: '#9334e6',
 }
 
-export default function TripMap({ points, entries = [] }) {
+export default function LegMap({ points, entries = [] }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
 

@@ -173,7 +173,7 @@ export default function TrackingPage() {
               transition: 'background 0.2s, box-shadow 0.2s',
             }}
           >
-            {status === 'uploading' ? 'Saving…' : tracking ? '⏹  Stop Trip' : '▶  Start Trip'}
+            {status === 'uploading' ? 'Saving…' : tracking ? '⏹  Stop Leg' : '▶  Start Leg'}
           </button>
 
         </div>
