@@ -100,41 +100,46 @@ function LegRow({ leg, tripId, isFirst, onDelete }) {
 }
 
 // ── Trip header card (named trip) ─────────────────────────────────
-function TripCard({ trip, legs, onDeleteTrip }) {
+function TripCard({ trip, legs, onEdit, onDeleteTrip }) {
   const totalNm = legs.reduce((s, l) => s + (l.distance_nm ?? 0), 0)
   const totalSeconds = legs.reduce((s, l) => s + (l.duration_seconds ?? 0), 0)
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <Link
-        href={`/trips/${trip.id}`}
-        style={{ display: 'block', textDecoration: 'none', background: '#1a73e8', borderRadius: '16px 16px 0 0', padding: '14px 16px' }}
-      >
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#fff' }}>{trip.name}</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
+      <div style={{ position: 'relative', background: '#1a73e8', borderRadius: '16px 16px 0 0' }}>
+        <Link
+          href={`/trips/${trip.id}`}
+          style={{ display: 'block', textDecoration: 'none', padding: '14px 48px 14px 16px' }}
+        >
+          <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#fff' }}>{trip.name}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
+              {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
+            </span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
+              {legs.length} {legs.length === 1 ? 'leg' : 'legs'}
+            </span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
+              {totalNm > 0 ? `${totalNm.toFixed(1)} NM` : '— NM'}
+            </span>
+            {totalSeconds > 0 && (
               <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
-                {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
+                {formatDuration(totalSeconds)}
               </span>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
-                {legs.length} {legs.length === 1 ? 'leg' : 'legs'}
-              </span>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
-                {totalNm > 0 ? `${totalNm.toFixed(1)} NM` : '— NM'}
-              </span>
-              {totalSeconds > 0 && (
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
-                  {formatDuration(totalSeconds)}
-                </span>
-              )}
-            </div>
+            )}
           </div>
-          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" style={{ marginTop: 4, flexShrink: 0 }}>
-            <path d="M1 1l6 5.5L1 12" stroke="rgba(255,255,255,0.7)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </Link>
+        <button
+          onClick={e => { e.preventDefault(); onEdit(trip) }}
+          style={{ position: 'absolute', top: '50%', right: 14, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 6, lineHeight: 0 }}
+          aria-label="Edit trip"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
-        </div>
-      </Link>
+        </button>
+      </div>
 
       {legs.length > 0 ? (
         <div style={{ background: '#fff', borderRadius: '0 0 16px 16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
@@ -147,6 +152,71 @@ function TripCard({ trip, legs, onDeleteTrip }) {
           No legs in this date range yet.
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Edit Trip modal ───────────────────────────────────────────────
+function EditTripModal({ trip, onClose, onSaved }) {
+  const [name, setName] = useState(trip.name)
+  const [startDate, setStartDate] = useState(trip.start_date)
+  const [endDate, setEndDate] = useState(trip.end_date)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSave() {
+    if (!name.trim() || !startDate || !endDate) return
+    if (endDate < startDate) { setError('End date must be after start date.'); return }
+    setSaving(true)
+    const { error: err } = await supabase.from('trips').update({
+      name: name.trim(),
+      start_date: startDate,
+      end_date: endDate,
+    }).eq('id', trip.id)
+    if (err) { setError('Could not save changes.'); setSaving(false); return }
+    onSaved()
+    onClose()
+  }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 340, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
+        <p style={{ margin: '0 0 20px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Edit Trip</p>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Name</label>
+        <input
+          autoFocus
+          value={name}
+          onChange={e => setName(e.target.value)}
+          style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1px solid #e8eaed', fontSize: 15, outline: 'none', marginBottom: 14 }}
+        />
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Start date</label>
+        <input
+          type="date"
+          value={startDate}
+          onChange={e => setStartDate(e.target.value)}
+          style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1px solid #e8eaed', fontSize: 15, outline: 'none', marginBottom: 14 }}
+        />
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>End date</label>
+        <input
+          type="date"
+          value={endDate}
+          onChange={e => setEndDate(e.target.value)}
+          style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1px solid #e8eaed', fontSize: 15, outline: 'none', marginBottom: error ? 8 : 20 }}
+        />
+        {error && <p style={{ margin: '0 0 12px', fontSize: 13, color: '#ea4335', textAlign: 'center' }}>{error}</p>}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !name.trim() || !startDate || !endDate}
+            style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: 'none', background: saving || !name.trim() ? '#dadce0' : '#1a73e8', color: saving || !name.trim() ? '#9aa0a6' : '#fff', fontSize: 15, fontWeight: 600, cursor: saving ? 'wait' : 'pointer' }}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -249,6 +319,7 @@ function CreateTripModal({ onClose, onCreated }) {
 // ── Main list ─────────────────────────────────────────────────────
 export default function TripsList({ trips, legs, onRefresh }) {
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [editTrip, setEditTrip] = useState(null)
   const [confirmLeg, setConfirmLeg] = useState(null)
   const [warnLeg, setWarnLeg] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -306,7 +377,7 @@ export default function TripsList({ trips, legs, onRefresh }) {
 
       {/* Named trips */}
       {grouped.map(({ trip, legs: tripLegs }) => (
-        <TripCard key={trip.id} trip={trip} legs={tripLegs} onDeleteTrip={() => {}} />
+        <TripCard key={trip.id} trip={trip} legs={tripLegs} onEdit={setEditTrip} onDeleteTrip={() => {}} />
       ))}
 
       {/* Standalone legs */}
@@ -338,6 +409,14 @@ export default function TripsList({ trips, legs, onRefresh }) {
         <CreateTripModal
           onClose={() => setShowCreateModal(false)}
           onCreated={onRefresh}
+        />
+      )}
+
+      {editTrip && (
+        <EditTripModal
+          trip={editTrip}
+          onClose={() => setEditTrip(null)}
+          onSaved={onRefresh}
         />
       )}
 
