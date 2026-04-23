@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracking Tab Mockup — Logbook Nadira</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #e8eaed;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 40px 24px 60px;
+    min-height: 100vh;
+  }
+  h1 {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #202124;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #5f6368;
+    margin-bottom: 40px;
+  }
+  .states {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .state-label {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #5f6368;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 320px;
+    height: 680px;
+    background: #fff;
+    border-radius: 44px;
+    box-shadow: 0 0 0 10px #1c1c1e, 0 24px 60px rgba(0,0,0,0.35);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .phone-inner {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+    overflow: hidden;
+  }
+
+  /* Status bar */
+  .status-bar {
+    background: #fff;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #202124;
+    flex-shrink: 0;
+  }
+
+  /* App header */
+  .app-header {
+    background: #fff;
+    border-bottom: 1px solid #e8eaed;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .app-icon {
+    width: 24px; height: 24px;
+    background: #1a73e8;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .app-icon svg { width: 14px; height: 14px; }
+  .app-title { font-size: 15px; font-weight: 700; color: #202124; letter-spacing: -0.3px; }
+  .sign-out { margin-left: auto; font-size: 11px; color: #9aa0a6; }
+
+  /* Scroll area */
+  .scroll-area {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 12px 0;
+    gap: 8px;
+  }
+
+  /* Recording badge */
+  .recording-badge {
+    display: flex; align-items: center; justify-content: center;
+    gap: 5px; font-size: 10px; font-weight: 600; color: #ea4335;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: -2px;
+  }
+  .rec-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #ea4335;
+    animation: pulse 1.4s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Stat cards grid */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid #e8eaed;
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  }
+  .stat-value { font-size: 20px; font-weight: 700; color: #202124; line-height: 1.1; }
+  .stat-sub { font-size: 10px; color: #1a73e8; font-weight: 500; margin-top: 1px; }
+  .stat-label { font-size: 9px; color: #9aa0a6; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+  /* Position row */
+  .position-row {
+    background: #fff;
+    border: 1px solid #e8eaed;
+    border-radius: 10px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .pos-label { font-size: 9px; color: #9aa0a6; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pos-value { font-size: 12px; font-weight: 600; color: #202124; }
+
+  /* Map */
+  .map-box {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e8eaed;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    background: #c8e6f5;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .map-box.map-small { height: 110px; }
+  .map-box.map-normal { height: 152px; }
+  .map-svg { width: 100%; height: 100%; }
+  .map-accuracy {
+    position: absolute; bottom: 6px; right: 6px;
+    background: rgba(255,255,255,0.92); border-radius: 12px;
+    padding: 2px 7px; font-size: 9px; color: #5f6368;
+    display: flex; align-items: center; gap: 3px;
+  }
+  .acc-dot { width: 5px; height: 5px; border-radius: 50%; background: #34a853; }
+
+  /* Log toggle button */
+  .log-toggle {
+    background: #fff;
+    border: 1.5px solid #e8eaed;
+    border-radius: 10px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    cursor: pointer;
+  }
+  .log-toggle-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #202124;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .log-toggle-label .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #1a73e8;
+  }
+  .chevron {
+    width: 14px; height: 14px;
+    color: #9aa0a6;
+  }
+
+  /* Event buttons grid */
+  .event-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+  .event-btn {
+    background: #fff;
+    border: 1.5px solid #e8eaed;
+    border-radius: 10px;
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #202124;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .event-btn.tack   { border-color: #1a73e8; color: #1a73e8; background: #e8f0fe; }
+  .event-btn.jibe   { border-color: #1a73e8; color: #1a73e8; background: #e8f0fe; }
+  .event-btn.reef   { border-color: #f29900; color: #f29900; background: #fef7e0; }
+  .event-btn.unreef { border-color: #34a853; color: #34a853; background: #e6f4ea; }
+  .event-btn.eng-on { border-color: #34a853; color: #34a853; background: #e6f4ea; }
+  .event-btn.eng-off{ border-color: #ea4335; color: #ea4335; background: #fce8e6; }
+  .event-btn-icon   { font-size: 14px; margin-bottom: 2px; }
+
+  /* Comment row */
+  .comment-row {
+    background: #fff;
+    border: 1.5px dashed #dadce0;
+    border-radius: 10px;
+    padding: 7px 12px;
+    font-size: 11px;
+    color: #9aa0a6;
+    text-align: center;
+  }
+
+  /* Main button */
+  .main-btn {
+    border-radius: 24px;
+    border: none;
+    padding: 13px 0;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    color: #fff;
+    flex-shrink: 0;
+    margin: 6px 0 4px;
+  }
+  .main-btn.start { background: #1a73e8; }
+  .main-btn.stop  { background: #ea4335; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    background: #fff;
+    border-top: 1px solid #e8eaed;
+    display: flex;
+    flex-shrink: 0;
+    padding-bottom: 6px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0 4px;
+    gap: 2px;
+  }
+  .nav-icon { width: 20px; height: 20px; }
+  .nav-label { font-size: 9px; font-weight: 400; color: #9aa0a6; }
+  .nav-item.active .nav-label { font-weight: 600; color: #1a73e8; }
+
+  /* Divider */
+  .spacer { flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<h1>Tracking Tab — UI Mockup</h1>
+<p class="subtitle">Option 1: Floating log events on Tracking tab</p>
+
+<div class="states">
+
+  <!-- STATE 1: No active trip -->
+  <div>
+    <div class="state-label">State 1 — No active leg</div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>9:41</span>
+          <span>●●●●  WiFi  🔋</span>
+        </div>
+        <div class="app-header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <circle cx="12" cy="12" r="4" fill="#fff" stroke="none"/>
+              <path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>
+            </svg>
+          </div>
+          <span class="app-title">Logbook Nadira</span>
+          <span class="sign-out">Sign out</span>
+        </div>
+
+        <div class="scroll-area">
+          <!-- Stat cards -->
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-value">—</div>
+              <div class="stat-label">SOG</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">—</div>
+              <div class="stat-label">COG</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">0.00</div>
+              <div class="stat-label">NM</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">0 min</div>
+              <div class="stat-label">TIME</div>
+            </div>
+          </div>
+
+          <!-- Position -->
+          <div class="position-row">
+            <span class="pos-label">Position</span>
+            <span class="pos-value">43.5121°N &nbsp; 16.4402°E</span>
+          </div>
+
+          <!-- Map — larger when no log panel -->
+          <div class="map-box map-normal">
+            <svg class="map-svg" viewBox="0 0 296 152" xmlns="http://www.w3.org/2000/svg">
+              <rect width="296" height="152" fill="#c8e6f5"/>
+              <path d="M0 90 Q40 70 80 85 Q120 100 160 80 Q200 60 240 75 Q270 85 296 70" fill="#d4edda" stroke="none"/>
+              <path d="M0 110 Q50 95 100 105 Q150 115 200 100 Q240 90 296 100" fill="#b8ddb0" stroke="none"/>
+              <!-- Grid lines -->
+              <line x1="0" y1="50" x2="296" y2="50" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+              <line x1="0" y1="100" x2="296" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+              <line x1="74" y1="0" x2="74" y2="152" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+              <line x1="148" y1="0" x2="148" y2="152" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+              <line x1="222" y1="0" x2="222" y2="152" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+              <!-- Boat position dot -->
+              <circle cx="148" cy="78" r="6" fill="#1a73e8" stroke="#fff" stroke-width="2"/>
+              <circle cx="148" cy="78" r="14" fill="rgba(26,115,232,0.15)" stroke="none"/>
+            </svg>
+            <div class="map-accuracy"><div class="acc-dot"></div>±8m</div>
+          </div>
+
+          <!-- No log events shown when not recording -->
+          <div style="background:#f8f9fa;border:1.5px dashed #dadce0;border-radius:10px;padding:10px;text-align:center;font-size:11px;color:#9aa0a6;">
+            Log events available during active leg
+          </div>
+
+          <!-- Start button -->
+          <div class="main-btn start">▶&nbsp; Start Leg</div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="bottom-nav">
+          <div class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="3" fill="#1a73e8"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-label" style="color:#1a73e8;font-weight:600">Tracking</span>
+          </div>
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#9aa0a6" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#9aa0a6" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-label">Log Entry</span>
+          </div>
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke="#9aa0a6" stroke-width="1.8"/>
+              <path d="M7 9h10M7 13h6" stroke="#9aa0a6" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-label">All Trips</span>
+          </div>
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="5" cy="12" r="1.5" fill="#9aa0a6"/>
+              <circle cx="12" cy="12" r="1.5" fill="#9aa0a6"/>
+              <circle cx="19" cy="12" r="1.5" fill="#9aa0a6"/>
+            </svg>
+            <span class="nav-label">More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATE 2: Recording, log panel COLLAPSED -->
+  <div>
+    <div class="state-label">State 2 — Recording · panel collapsed</div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>9:41</span>
+          <span>●●●●  WiFi  🔋</span>
+        </div>
+        <div class="app-header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <circle cx="12" cy="12" r="4" fill="#fff" stroke="none"/>
+              <path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>
+            </svg>
+          </div>
+          <span class="app-title">Logbook Nadira</span>
+          <span class="sign-out">Sign out</span>
+        </div>
+
+        <div class="scroll-area">
+          <!-- Recording badge -->
+          <div class="recording-badge">
+            <div class="rec-dot"></div>
+            Recording
+          </div>
+
+          <!-- Stat cards -->
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-value">4.2</div>
+              <div class="stat-sub">knots</div>
+              <div class="stat-label">SOG</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">247°</div>
+              <div class="stat-sub">WSW</div>
+              <div class="stat-label">COG</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">3.14</div>
+              <div class="stat-sub">nautical mi</div>
+              <div class="stat-label">NM</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">44 min</div>
+              <div class="stat-label">TIME</div>
+            </div>
+          </div>
+
+          <!-- Position -->
+          <div class="position-row">
+            <span class="pos-label">Position</span>
+            <span class="pos-value">43.4890°N &nbsp; 16.3821°E</span>
+          </div>
+
+          <!-- Map — slightly smaller to make room -->
+          <div class="map-box map-small">
+            <svg class="map-svg" viewBox="0 0 296 110" xmlns="http://www.w3.org/2000/svg">
+              <rect width="296" height="110" fill="#c8e6f5"/>
+              <path d="M0 70 Q40 55 80 65 Q120 75 160 58 Q200 42 240 55 Q270 64 296 52" fill="#d4edda" stroke="none"/>
+              <path d="M0 90 Q50 78 100 85 Q150 92 200 78 Q240 68 296 76" fill="#b8ddb0" stroke="none"/>
+              <!-- Track line -->
+              <polyline points="60,85 80,78 105,70 130,65 155,60 175,55" fill="none" stroke="#1a73e8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Current position -->
+              <circle cx="175" cy="55" r="5" fill="#1a73e8" stroke="#fff" stroke-width="2"/>
+              <circle cx="175" cy="55" r="11" fill="rgba(26,115,232,0.15)"/>
+            </svg>
+            <div class="map-accuracy"><div class="acc-dot"></div>±6m</div>
+          </div>
+
+          <!-- Log toggle — COLLAPSED -->
+          <div class="log-toggle">
+            <div class="log-toggle-label">
+              <div class="dot"></div>
+              Log Event
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="#9aa0a6" stroke-width="2.5" stroke-linecap="round">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
+          <!-- Stop button -->
+          <div class="main-btn stop">⏹&nbsp; Stop Leg</div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="bottom-nav">
+          <div class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="3" fill="#1a73e8"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-label" style="color:#1a73e8;font-weight:600">Tracking</span>
+          </div>
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#9aa0a6" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#9aa0a6" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-label">Log Entry</span>
+          </div>
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke="#9aa0a6" stroke-width="1.8"/>
+              <path d="M7 9h10M7 13h6" stroke="#9aa0a6" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-label">All Trips</span>
+          </div>
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="5" cy="12" r="1.5" fill="#9aa0a6"/>
+              <circle cx="12" cy="12" r="1.5" fill="#9aa0a6"/>
+              <circle cx="19" cy="12" r="1.5" fill="#9aa0a6"/>
+            </svg>
+            <span class="nav-label">More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATE 3: Recording, log panel OPEN -->
+  <div>
+    <div class="state-label">State 3 — Recording · panel open</div>
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="status-bar">
+          <span>9:41</span>
+          <span>●●●●  WiFi  🔋</span>
+        </div>
+        <div class="app-header">
+          <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <circle cx="12" cy="12" r="4" fill="#fff" stroke="none"/>
+              <path d="M12 3v2M12 19v2M3 12h2M19 12h2"/>
+            </svg>
+          </div>
+          <span class="app-title">Logbook Nadira</span>
+          <span class="sign-out">Sign out</span>
+        </div>
+
+        <div class="scroll-area">
+          <!-- Recording badge -->
+          <div class="recording-badge">
+            <div class="rec-dot"></div>
+            Recording
+          </div>
+
+          <!-- Stat cards -->
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-value">4.2</div>
+              <div class="stat-sub">knots</div>
+              <div class="stat-label">SOG</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">247°</div>
+              <div class="stat-sub">WSW</div>
+              <div class="stat-label">COG</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">3.14</div>
+              <div class="stat-sub">nautical mi</div>
+              <div class="stat-label">NM</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">44 min</div>
+              <div class="stat-label">TIME</div>
+            </div>
+          </div>
+
+          <!-- Position — hidden when panel open to save space -->
+
+          <!-- Map — smaller -->
+          <div class="map-box" style="height:90px;border-radius:10px;">
+            <svg class="map-svg" viewBox="0 0 296 90" xmlns="http://www.w3.org/2000/svg">
+              <rect width="296" height="90" fill="#c8e6f5"/>
+              <path d="M0 58 Q40 45 80 54 Q120 62 160 48 Q200 34 240 45 Q270 52 296 42" fill="#d4edda" stroke="none"/>
+              <polyline points="60,70 80,63 105,57 130,53 155,49 175,45" fill="none" stroke="#1a73e8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="175" cy="45" r="5" fill="#1a73e8" stroke="#fff" stroke-width="2"/>
+            </svg>
+            <div class="map-accuracy"><div class="acc-dot"></div>±6m</div>
+          </div>
+
+          <!-- Log toggle — OPEN (chevron rotated) -->
+          <div class="log-toggle" style="border-color:#1a73e8;background:#f0f6ff;">
+            <div class="log-toggle-label" style="color:#1a73e8;">
+              <div class="dot"></div>
+              Log Event
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2.5" stroke-linecap="round" style="transform:rotate(180deg)">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
+          <!-- Event buttons -->
+          <div class="event-grid">
+            <div class="event-btn tack">
+              <div class="event-btn-icon">⟵</div>
+              Tack
+            </div>
+            <div class="event-btn jibe">
+              <div class="event-btn-icon">⟵</div>
+              Jibe
+            </div>
+            <div class="event-btn reef">
+              <div class="event-btn-icon">↓</div>
+              Reef
+            </div>
+            <div class="event-btn unreef">
+              <div class="event-btn-icon">↑</div>
+              Unreef
+            </div>
+            <div class="event-btn eng-on">
+              <div class="event-btn-icon">⚙</div>
+              Engine On
+            </div>
+            <div class="event-btn eng-off">
+              <div class="event-btn-icon">⚙</div>
+              Engine Off
+            </div>
+          </div>
+
+          <!-- Comment -->
+          <div class="comment-row">+ Add comment…</div>
+
+          <!-- Stop button -->
+          <div class="main-btn stop">⏹&nbsp; Stop Leg</div>
+        </div>
+
+        <!-- Bottom nav -->
+        <div class="bottom-nav">
+          <div class="nav-item active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="3" fill="#1a73e8"/>
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-label" style="color:#1a73e8;font-weight:600">Tracking</span>
+          </div>
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#9aa0a6" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#9aa0a6" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-label">Log Entry</span>
+          </div>
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke="#9aa0a6" stroke-width="1.8"/>
+              <path d="M7 9h10M7 13h6" stroke="#9aa0a6" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-label">All Trips</span>
+          </div>
+          <div class="nav-item">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="5" cy="12" r="1.5" fill="#9aa0a6"/>
+              <circle cx="12" cy="12" r="1.5" fill="#9aa0a6"/>
+              <circle cx="19" cy="12" r="1.5" fill="#9aa0a6"/>
+            </svg>
+            <span class="nav-label">More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="text-align:center;font-size:12px;color:#9aa0a6;margin-top:40px;">
+  Open this file in any browser · <code>mockup-tracking-tab.html</code>
+</p>
+
+</body>
+</html>

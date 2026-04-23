@@ -8,10 +8,29 @@ import BottomNav from './BottomNav'
 import { useTripContext } from './TripContext'
 import { useGpsTracking } from './useGpsTracking'
 
+const EVENTS = ['TACK', 'JIBE', 'REEF', 'UNREEF', 'ENGINE ON', 'ENGINE OFF']
+
+const EVENT_STYLE = {
+  TACK:       { color: '#1a73e8', bg: '#e8f0fe', border: '#1a73e8' },
+  JIBE:       { color: '#1a73e8', bg: '#e8f0fe', border: '#1a73e8' },
+  REEF:       { color: '#f29900', bg: '#fef7e0', border: '#f29900' },
+  UNREEF:     { color: '#34a853', bg: '#e6f4ea', border: '#34a853' },
+  'ENGINE ON':  { color: '#34a853', bg: '#e6f4ea', border: '#34a853' },
+  'ENGINE OFF': { color: '#ea4335', bg: '#fce8e6', border: '#ea4335' },
+}
+
 function cogToCompass(deg) {
   if (deg == null) return ''
   const dirs = ['N','NE','E','SE','S','SW','W','NW']
   return dirs[Math.round(deg / 45) % 8]
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path d="M20 6L9 17l-5-5" stroke="#34a853" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
 }
 
 function StatCard({ label, value, sub }) {
@@ -33,7 +52,7 @@ function StatCard({ label, value, sub }) {
 
 export default function TrackingPage() {
   const tripContext = useTripContext()
-  const { isTracking } = tripContext
+  const { isTracking, tripId, currentPosition } = tripContext
 
   const [splash, setSplash] = useState(() =>
     typeof window !== 'undefined' ? !sessionStorage.getItem('splashShown') : false
@@ -45,6 +64,11 @@ export default function TrackingPage() {
     const lng = parseFloat(localStorage.getItem('lastLng'))
     return isNaN(lat) || isNaN(lng) ? null : { lat, lng }
   })
+  const [confirmed, setConfirmed] = useState(null)
+  const [comment, setComment] = useState('')
+  const [savingComment, setSavingComment] = useState(false)
+  const [commentSaved, setCommentSaved] = useState(false)
+  const [showStopConfirm, setShowStopConfirm] = useState(false)
 
   useEffect(() => {
     if (!splash) return
@@ -58,6 +82,36 @@ export default function TrackingPage() {
     useGpsTracking(tripContext)
 
   const tracking = isTracking === true
+
+  async function logEvent(type) {
+    if (!tracking) return
+    await supabase.from('logbook_entries').insert({
+      trip_id: tripId,
+      event_type: type.toLowerCase(),
+      recorded_at: new Date().toISOString(),
+      lat: currentPosition?.lat ?? null,
+      lng: currentPosition?.lng ?? null,
+    })
+    setConfirmed(type)
+    setTimeout(() => setConfirmed(null), 1500)
+  }
+
+  async function saveComment() {
+    if (!comment.trim() || !tracking) return
+    setSavingComment(true)
+    await supabase.from('logbook_entries').insert({
+      trip_id: tripId,
+      event_type: 'comment',
+      comment: comment.trim(),
+      recorded_at: new Date().toISOString(),
+      lat: currentPosition?.lat ?? null,
+      lng: currentPosition?.lng ?? null,
+    })
+    setSavingComment(false)
+    setComment('')
+    setCommentSaved(true)
+    setTimeout(() => setCommentSaved(false), 1500)
+  }
 
   return (
     <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>
@@ -107,7 +161,7 @@ export default function TrackingPage() {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
             <StatCard
               label="SOG"
               value={position?.speed != null ? position.speed.toFixed(1) : '—'}
@@ -118,15 +172,8 @@ export default function TrackingPage() {
               value={position?.course != null ? `${Math.round(position.course)}°` : '—'}
               sub={position?.course != null ? cogToCompass(position.course) : null}
             />
-            <StatCard
-              label="NM"
-              value={distanceNm.toFixed(2)}
-              sub={distanceNm > 0 ? 'nautical mi' : null}
-            />
-            <StatCard
-              label="TIME"
-              value={`${Math.floor(elapsed / 60)} min`}
-            />
+            <StatCard label="NM" value={distanceNm.toFixed(2)} sub={distanceNm > 0 ? 'nautical mi' : null} />
+            <StatCard label="TIME" value={`${Math.floor(elapsed / 60)} min`} />
           </div>
 
           <div style={{
@@ -143,9 +190,9 @@ export default function TrackingPage() {
           </div>
 
           <div style={{
-            position: 'relative', height: 260, borderRadius: 16, overflow: 'hidden',
+            position: 'relative', height: 220, borderRadius: 16, overflow: 'hidden',
             border: '1px solid #e8eaed', boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            marginBottom: 20, background: '#e8f0fe',
+            marginBottom: 14, background: '#e8f0fe',
           }}>
             <LiveMap trackPoints={trackPoints} currentPosition={position} initialCenter={initialMapCenter} />
             {position && (
@@ -161,8 +208,66 @@ export default function TrackingPage() {
             )}
           </div>
 
+          {/* Log events — only when recording */}
+          {tracking && (
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Log Event
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+                {EVENTS.map(type => {
+                  const s = EVENT_STYLE[type]
+                  const isConfirmed = confirmed === type
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => logEvent(type)}
+                      style={{
+                        padding: '12px 4px', borderRadius: 12, fontSize: 12, fontWeight: 600,
+                        cursor: 'pointer', transition: 'all 0.15s',
+                        background: isConfirmed ? '#e6f4ea' : s.bg,
+                        color: isConfirmed ? '#34a853' : s.color,
+                        border: `1.5px solid ${isConfirmed ? '#34a853' : s.border}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      }}
+                    >
+                      {isConfirmed ? <><CheckIcon /> Saved</> : type}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Comment */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <textarea
+                  value={comment}
+                  onChange={e => setComment(e.target.value)}
+                  placeholder="Add a comment…"
+                  rows={2}
+                  style={{
+                    flex: 1, borderRadius: 10, border: '1px solid #e8eaed', padding: '8px 10px',
+                    fontSize: 14, resize: 'none', fontFamily: 'inherit', color: '#202124', outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={saveComment}
+                  disabled={savingComment || !comment.trim()}
+                  style={{
+                    padding: '0 14px', borderRadius: 10, border: 'none', flexShrink: 0,
+                    background: commentSaved ? '#e6f4ea' : savingComment || !comment.trim() ? '#dadce0' : '#1a73e8',
+                    color: commentSaved ? '#34a853' : savingComment || !comment.trim() ? '#9aa0a6' : '#fff',
+                    fontSize: 13, fontWeight: 600, cursor: !comment.trim() ? 'default' : 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 4,
+                  }}
+                >
+                  {commentSaved ? <><CheckIcon /> Saved</> : savingComment ? '…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          )}
+
           <button
-            onClick={tracking ? stopTripHandler : startTripHandler}
+            onClick={tracking ? () => setShowStopConfirm(true) : startTripHandler}
             disabled={status === 'uploading'}
             style={{
               width: '100%', padding: '16px 0', borderRadius: 28, border: 'none',
@@ -178,6 +283,38 @@ export default function TrackingPage() {
 
         </div>
       </div>
+
+      {/* Stop confirmation modal */}
+      {showStopConfirm && (
+        <div
+          onClick={() => setShowStopConfirm(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 320, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
+          >
+            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Stop Leg?</p>
+            <p style={{ margin: '0 0 24px', fontSize: 14, color: '#5f6368', textAlign: 'center', lineHeight: 1.5 }}>
+              This will end the current leg and save all track data.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowStopConfirm(false)}
+                style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowStopConfirm(false); stopTripHandler() }}
+                style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: 'none', background: '#ea4335', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Stop Leg
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>
