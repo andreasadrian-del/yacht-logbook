@@ -94,6 +94,64 @@ On app open, the last known position is read from `localStorage` to zoom the map
 
 ---
 
+## Tracking tab UI decisions
+
+### Log Entry tab removed; events always visible during recording
+Event buttons (Tack, Jibe, Reef, Unreef, Engine On/Off) were moved from a separate Log Entry tab to the Tracking tab itself. They appear below the stat cards only while a leg is being recorded. This avoids tab-switching mid-sail.
+
+### Event button grid is column-first
+Buttons are laid out with `gridAutoFlow: 'column'`, `gridTemplateColumns: '1fr 1fr 1fr'`, `gridTemplateRows: 'auto auto'`. The array order `[TACK, JIBE, REEF, UNREEF, ENGINE ON, ENGINE OFF]` fills column-by-column, giving Tack/Jibe in col 1, Reef/Unreef in col 2, Engine On/Off in col 3.
+
+### Event button colours by type
+Tack/Jibe: blue (`#1a73e8`). Reef/Unreef: orange (`#f29900`). Engine On/Off: green (`#34a853`). Uniform within each pair so the user can recognise the action category at a glance.
+
+### FAB for comments instead of inline textarea
+A floating action button (bottom-left, `position: fixed, bottom: 74, left: 16`) opens a comment modal. This keeps the tracking view clean when no comment is being written.
+
+### Red dot instead of "Recording" text in header
+While a leg is recording, a small red circle (`width: 8, height: 8, borderRadius: '50%', background: '#ea4335'`) is positioned top-right of the "Nadira" title text (`position: absolute, top: 1, right: -10`). No text label — reduces visual noise.
+
+### Stop button uses ■ not ⏹
+`⏹` (U+23F9) renders with a grey emoji container on iOS. `■` (plain-text square) renders cleanly and matches the `▶` start symbol which also has no container.
+
+---
+
+## Soft delete and More tab
+
+### Legs are soft-deleted, not hard-deleted
+`legs` has a `deleted_at timestamptz` column. Deletion sets `deleted_at = now()`. All normal queries filter `.is('deleted_at', null)`. This prevents accidental data loss and allows recovery.
+
+### More tab shows deleted legs
+`app/more/page.js` fetches legs where `deleted_at IS NOT NULL`. Swipe right reveals a blue Restore button (sets `deleted_at = null`). Swipe left reveals a red Delete button (hard delete with confirmation modal).
+
+### Auto-delete parent trip when last leg is removed
+When a leg is soft-deleted and it was the last leg belonging to its parent trip, the trip record is also deleted. Checked after the leg update: fetch remaining legs in the trip's date range; if count = 0, delete the trip.
+
+---
+
+## All Trips page decisions
+
+### Trip cards are collapsed by default on each visit
+Each TripCard has local `expanded` state initialised to `false`. Legs are hidden until the user taps the chevron. No persistence across visits — always starts collapsed.
+
+### Pencil icon for editing trip name/dates
+A pencil button is positioned `absolute` in the top-right of the trip card header (outside the Link that navigates to the detail page) to avoid nesting a button inside an anchor (invalid HTML). Opens EditTripModal.
+
+---
+
+## Trip detail page decisions
+
+### Trip overview map with coloured legs
+`TripOverviewMap.js` draws one coloured polyline per leg using `LEG_COLORS` (8-colour array exported from that file). A numbered DivIcon marks the start of each leg. Map auto-fits to all points with `fitBounds`.
+
+### `LEG_COLORS` exported and reused in leg list
+The same array is imported in `TripDetailView.js` so the numbered badge on each leg row matches the colour on the map.
+
+### Leg detail back button respects origin
+`/legs/[id]` accepts `?from=tripId` search param. If present, the back button links to `/trips/<tripId>`; otherwise it links to `/trips`.
+
+---
+
 ## Version tags (git)
 
 | Tag | Contents |
@@ -104,3 +162,4 @@ On app open, the last known position is read from `localStorage` to zoom the map
 | `v1.3-pwa-engine` | PWA, Engine On/Off buttons, tab speed |
 | `v1.4-refactor` | GPS logic extracted into `useGpsTracking` hook |
 | `v1.5-pre-legs-refactor` | Snapshot before trips/legs hierarchy refactor |
+| `v1.6-trips-legs-ui` | Trips/legs hierarchy, soft delete, More tab, event buttons on tracking tab, trip overview map |
