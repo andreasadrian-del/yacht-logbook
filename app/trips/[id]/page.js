@@ -24,6 +24,7 @@ export default async function TripDetailPage({ params }) {
     .eq('user_id', user.id)
     .gte('started_at', trip.start_date)
     .lte('started_at', trip.end_date + 'T23:59:59.999Z')
+    .is('deleted_at', null)
     .order('started_at', { ascending: true })
 
   return <TripDetailView trip={trip} legs={legs ?? []} />

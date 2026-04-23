@@ -39,12 +39,23 @@ export default function BottomNav() {
         </svg>
       ),
     },
+    {
+      href: '/more',
+      label: 'More',
+      icon: (c) => (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="5" cy="12" r="1.5" fill={c}/>
+          <circle cx="12" cy="12" r="1.5" fill={c}/>
+          <circle cx="19" cy="12" r="1.5" fill={c}/>
+        </svg>
+      ),
+    },
   ]
 
   return (
     <div style={{ display: 'flex', borderTop: '1px solid #e8eaed', background: '#fff', flexShrink: 0 }}>
       {tabs.map(tab => {
-        const isActive = pathname === tab.href
+        const isActive = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href)
         const color = isActive ? active : inactive
         return (
           <Link key={tab.href} href={tab.href} style={{

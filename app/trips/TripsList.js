@@ -348,27 +348,8 @@ export default function TripsList({ trips, legs, onRefresh }) {
   async function confirmDeleteLeg() {
     if (!confirmLeg) return
     setDeleting(true)
-    const { leg, parentTripId } = confirmLeg
-    await supabase.from('track_points').delete().eq('trip_id', leg.id)
-    await supabase.from('logbook_entries').delete().eq('trip_id', leg.id)
-    await supabase.from('trip_notes').delete().eq('trip_id', leg.id)
-    await supabase.from('legs').delete().eq('id', leg.id)
-
-    // Auto-delete parent trip if this was its last leg
-    if (parentTripId) {
-      const parentTrip = trips.find(t => t.id === parentTripId)
-      if (parentTrip) {
-        const remaining = legs.filter(l =>
-          l.id !== leg.id &&
-          l.started_at.slice(0, 10) >= parentTrip.start_date &&
-          l.started_at.slice(0, 10) <= parentTrip.end_date
-        )
-        if (remaining.length === 0) {
-          await supabase.from('trips').delete().eq('id', parentTripId)
-        }
-      }
-    }
-
+    const { leg } = confirmLeg
+    await supabase.from('legs').update({ deleted_at: new Date().toISOString() }).eq('id', leg.id)
     setConfirmLeg(null)
     setDeleting(false)
     onRefresh()
@@ -455,9 +436,9 @@ export default function TripsList({ trips, legs, onRefresh }) {
       {confirmLeg && (
         <div onClick={() => !deleting && setConfirmLeg(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 320, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Delete Leg?</p>
+            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Remove Leg?</p>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: '#5f6368', textAlign: 'center', lineHeight: 1.5 }}>
-              {formatDate(confirmLeg.leg.started_at)} — this will permanently delete all track points and log entries.
+              {formatDate(confirmLeg.leg.started_at)} — this leg will be moved to the deleted archive and can be restored from the More tab.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setConfirmLeg(null)} disabled={deleting} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>

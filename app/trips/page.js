@@ -14,7 +14,7 @@ export default function TripsPage() {
   const fetchAll = useCallback(async () => {
     const [tripsRes, legsRes] = await Promise.all([
       supabase.from('trips').select('*').order('start_date', { ascending: false }),
-      supabase.from('legs').select('id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng').order('started_at', { ascending: false }),
+      supabase.from('legs').select('id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng').is('deleted_at', null).order('started_at', { ascending: false }),
     ])
     if (tripsRes.error || legsRes.error) { setError(true); return }
     setTrips(tripsRes.data ?? [])
