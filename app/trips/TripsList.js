@@ -100,7 +100,7 @@ function LegRow({ leg, tripId, isFirst, onDelete }) {
 }
 
 // ── Trip header card (named trip) ─────────────────────────────────
-function TripCard({ trip, legs, onEdit, onDeleteTrip }) {
+function TripCard({ trip, legs, onEdit, onDeleteLeg }) {
   const totalNm = legs.reduce((s, l) => s + (l.distance_nm ?? 0), 0)
   const totalSeconds = legs.reduce((s, l) => s + (l.duration_seconds ?? 0), 0)
 
@@ -144,7 +144,7 @@ function TripCard({ trip, legs, onEdit, onDeleteTrip }) {
       {legs.length > 0 ? (
         <div style={{ background: '#fff', borderRadius: '0 0 16px 16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           {legs.map((leg, i) => (
-            <LegRow key={leg.id} leg={leg} tripId={trip.id} isFirst={i === 0} onDelete={() => {}} />
+            <LegRow key={leg.id} leg={leg} tripId={trip.id} isFirst={i === 0} onDelete={leg => onDeleteLeg(leg, trip.id)} />
           ))}
         </div>
       ) : (
@@ -340,19 +340,35 @@ export default function TripsList({ trips, legs, onRefresh }) {
 
   const standAloneLegs = legs.filter(l => !assignedLegIds.has(l.id))
 
-  function handleDeleteLegRequest(leg) {
+  function handleDeleteLegRequest(leg, parentTripId = null) {
     if (!leg.ended_at) { setWarnLeg(leg); return }
-    setConfirmLeg(leg)
+    setConfirmLeg({ leg, parentTripId })
   }
 
   async function confirmDeleteLeg() {
     if (!confirmLeg) return
     setDeleting(true)
-    const id = confirmLeg.id
-    await supabase.from('track_points').delete().eq('trip_id', id)
-    await supabase.from('logbook_entries').delete().eq('trip_id', id)
-    await supabase.from('trip_notes').delete().eq('trip_id', id)
-    await supabase.from('legs').delete().eq('id', id)
+    const { leg, parentTripId } = confirmLeg
+    await supabase.from('track_points').delete().eq('trip_id', leg.id)
+    await supabase.from('logbook_entries').delete().eq('trip_id', leg.id)
+    await supabase.from('trip_notes').delete().eq('trip_id', leg.id)
+    await supabase.from('legs').delete().eq('id', leg.id)
+
+    // Auto-delete parent trip if this was its last leg
+    if (parentTripId) {
+      const parentTrip = trips.find(t => t.id === parentTripId)
+      if (parentTrip) {
+        const remaining = legs.filter(l =>
+          l.id !== leg.id &&
+          l.started_at.slice(0, 10) >= parentTrip.start_date &&
+          l.started_at.slice(0, 10) <= parentTrip.end_date
+        )
+        if (remaining.length === 0) {
+          await supabase.from('trips').delete().eq('id', parentTripId)
+        }
+      }
+    }
+
     setConfirmLeg(null)
     setDeleting(false)
     onRefresh()
@@ -377,7 +393,7 @@ export default function TripsList({ trips, legs, onRefresh }) {
 
       {/* Named trips */}
       {grouped.map(({ trip, legs: tripLegs }) => (
-        <TripCard key={trip.id} trip={trip} legs={tripLegs} onEdit={setEditTrip} onDeleteTrip={() => {}} />
+        <TripCard key={trip.id} trip={trip} legs={tripLegs} onEdit={setEditTrip} onDeleteLeg={handleDeleteLegRequest} />
       ))}
 
       {/* Standalone legs */}
@@ -441,7 +457,7 @@ export default function TripsList({ trips, legs, onRefresh }) {
           <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 320, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
             <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Delete Leg?</p>
             <p style={{ margin: '0 0 24px', fontSize: 14, color: '#5f6368', textAlign: 'center', lineHeight: 1.5 }}>
-              {formatDate(confirmLeg.started_at)} — this will permanently delete all track points and log entries.
+              {formatDate(confirmLeg.leg.started_at)} — this will permanently delete all track points and log entries.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setConfirmLeg(null)} disabled={deleting} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
