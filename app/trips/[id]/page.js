@@ -27,5 +27,16 @@ export default async function TripDetailPage({ params }) {
     .is('deleted_at', null)
     .order('started_at', { ascending: true })
 
-  return <TripDetailView trip={trip} legs={legs ?? []} />
+  const legIds = (legs ?? []).map(l => l.id)
+  const { data: rawPoints } = legIds.length > 0
+    ? await supabase.from('track_points').select('lat, lng, trip_id').in('trip_id', legIds).order('recorded_at')
+    : { data: [] }
+
+  const pointsByLeg = {}
+  for (const pt of rawPoints ?? []) {
+    if (!pointsByLeg[pt.trip_id]) pointsByLeg[pt.trip_id] = []
+    pointsByLeg[pt.trip_id].push(pt)
+  }
+
+  return <TripDetailView trip={trip} legs={legs ?? []} pointsByLeg={pointsByLeg} />
 }
