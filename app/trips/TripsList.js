@@ -101,15 +101,16 @@ function LegRow({ leg, tripId, isFirst, onDelete }) {
 
 // ── Trip header card (named trip) ─────────────────────────────────
 function TripCard({ trip, legs, onEdit, onDeleteLeg }) {
+  const [expanded, setExpanded] = useState(false)
   const totalNm = legs.reduce((s, l) => s + (l.distance_nm ?? 0), 0)
   const totalSeconds = legs.reduce((s, l) => s + (l.duration_seconds ?? 0), 0)
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ position: 'relative', background: '#1a73e8', borderRadius: '16px 16px 0 0' }}>
+      <div style={{ position: 'relative', background: '#1a73e8', borderRadius: expanded && legs.length > 0 ? '16px 16px 0 0' : 16 }}>
         <Link
           href={`/trips/${trip.id}`}
-          style={{ display: 'block', textDecoration: 'none', padding: '14px 48px 14px 16px' }}
+          style={{ display: 'block', textDecoration: 'none', padding: '14px 80px 14px 16px' }}
         >
           <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#fff' }}>{trip.name}</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
@@ -129,9 +130,28 @@ function TripCard({ trip, legs, onEdit, onDeleteLeg }) {
             )}
           </div>
         </Link>
+
+        {/* Collapse toggle */}
+        {legs.length > 0 && (
+          <button
+            onClick={() => setExpanded(v => !v)}
+            style={{ position: 'absolute', top: '50%', right: 42, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 6, lineHeight: 0 }}
+            aria-label={expanded ? 'Collapse legs' : 'Expand legs'}
+          >
+            <svg
+              width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="rgba(255,255,255,0.9)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
+            >
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+        )}
+
+        {/* Edit pencil */}
         <button
           onClick={e => { e.preventDefault(); onEdit(trip) }}
-          style={{ position: 'absolute', top: '50%', right: 14, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 6, lineHeight: 0 }}
+          style={{ position: 'absolute', top: '50%', right: 12, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 6, lineHeight: 0 }}
           aria-label="Edit trip"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -141,15 +161,11 @@ function TripCard({ trip, legs, onEdit, onDeleteLeg }) {
         </button>
       </div>
 
-      {legs.length > 0 ? (
+      {expanded && legs.length > 0 && (
         <div style={{ background: '#fff', borderRadius: '0 0 16px 16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           {legs.map((leg, i) => (
             <LegRow key={leg.id} leg={leg} tripId={trip.id} isFirst={i === 0} onDelete={leg => onDeleteLeg(leg, trip.id)} />
           ))}
-        </div>
-      ) : (
-        <div style={{ background: '#fff', borderRadius: '0 0 16px 16px', padding: '14px 16px', fontSize: 13, color: '#9aa0a6', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          No legs in this date range yet.
         </div>
       )}
     </div>
