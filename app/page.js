@@ -11,12 +11,12 @@ import { useGpsTracking } from './useGpsTracking'
 const EVENTS = ['TACK', 'JIBE', 'REEF', 'UNREEF', 'ENGINE ON', 'ENGINE OFF']
 
 const EVENT_STYLE = {
-  TACK:       { color: '#1a73e8', bg: '#e8f0fe', border: '#1a73e8' },
-  JIBE:       { color: '#1a73e8', bg: '#e8f0fe', border: '#1a73e8' },
-  REEF:       { color: '#f29900', bg: '#fef7e0', border: '#f29900' },
-  UNREEF:     { color: '#34a853', bg: '#e6f4ea', border: '#34a853' },
+  TACK:         { color: '#1a73e8', bg: '#e8f0fe', border: '#1a73e8' },
+  JIBE:         { color: '#1a73e8', bg: '#e8f0fe', border: '#1a73e8' },
+  REEF:         { color: '#f29900', bg: '#fef7e0', border: '#f29900' },
+  UNREEF:       { color: '#f29900', bg: '#fef7e0', border: '#f29900' },
   'ENGINE ON':  { color: '#34a853', bg: '#e6f4ea', border: '#34a853' },
-  'ENGINE OFF': { color: '#ea4335', bg: '#fce8e6', border: '#ea4335' },
+  'ENGINE OFF': { color: '#34a853', bg: '#e6f4ea', border: '#34a853' },
 }
 
 function cogToCompass(deg) {
