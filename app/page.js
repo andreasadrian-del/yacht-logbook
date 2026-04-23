@@ -36,14 +36,14 @@ function CheckIcon() {
 function StatCard({ label, value, sub }) {
   return (
     <div style={{
-      background: '#fff', border: '1px solid #e8eaed', borderRadius: 14,
-      padding: '16px 10px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+      background: '#fff', border: '1px solid #e8eaed', borderRadius: 12,
+      padding: '11px 8px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
     }}>
-      <p style={{ margin: 0, fontSize: 26, fontWeight: 700, color: '#202124', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>
+      <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#202124', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>
         {value}
       </p>
-      {sub && <p style={{ margin: '2px 0 0', fontSize: 12, color: '#1a73e8', fontWeight: 500 }}>{sub}</p>}
-      <p style={{ margin: sub ? '2px 0 0' : '6px 0 0', fontSize: 11, color: '#9aa0a6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+      {sub && <p style={{ margin: '2px 0 0', fontSize: 11, color: '#1a73e8', fontWeight: 500 }}>{sub}</p>}
+      <p style={{ margin: sub ? '2px 0 0' : '5px 0 0', fontSize: 10, color: '#9aa0a6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
         {label}
       </p>
     </div>
@@ -69,6 +69,7 @@ export default function TrackingPage() {
   const [savingComment, setSavingComment] = useState(false)
   const [commentSaved, setCommentSaved] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
+  const [showCommentModal, setShowCommentModal] = useState(false)
 
   useEffect(() => {
     if (!splash) return
@@ -236,33 +237,6 @@ export default function TrackingPage() {
                   )
                 })}
               </div>
-
-              {/* Comment */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <textarea
-                  value={comment}
-                  onChange={e => setComment(e.target.value)}
-                  placeholder="Add a comment…"
-                  rows={2}
-                  style={{
-                    flex: 1, borderRadius: 10, border: '1px solid #e8eaed', padding: '8px 10px',
-                    fontSize: 14, resize: 'none', fontFamily: 'inherit', color: '#202124', outline: 'none',
-                  }}
-                />
-                <button
-                  onClick={saveComment}
-                  disabled={savingComment || !comment.trim()}
-                  style={{
-                    padding: '0 14px', borderRadius: 10, border: 'none', flexShrink: 0,
-                    background: commentSaved ? '#e6f4ea' : savingComment || !comment.trim() ? '#dadce0' : '#1a73e8',
-                    color: commentSaved ? '#34a853' : savingComment || !comment.trim() ? '#9aa0a6' : '#fff',
-                    fontSize: 13, fontWeight: 600, cursor: !comment.trim() ? 'default' : 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 4,
-                  }}
-                >
-                  {commentSaved ? <><CheckIcon /> Saved</> : savingComment ? '…' : 'Save'}
-                </button>
-              </div>
             </div>
           )}
 
@@ -283,6 +257,87 @@ export default function TrackingPage() {
 
         </div>
       </div>
+
+      {/* Floating comment button — visible while recording */}
+      {tracking && (
+        <button
+          onClick={() => setShowCommentModal(true)}
+          style={{
+            position: 'fixed', bottom: 74, left: 16, zIndex: 600,
+            width: 50, height: 50, borderRadius: '50%',
+            background: '#1a73e8', border: 'none',
+            boxShadow: '0 4px 14px rgba(26,115,232,0.45)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+          aria-label="Add comment"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="#fff"/>
+          </svg>
+        </button>
+      )}
+
+      {/* Comment modal */}
+      {showCommentModal && (
+        <div
+          onClick={() => setShowCommentModal(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 90px' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 20, padding: '24px 20px', width: '100%', maxWidth: 520, boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
+          >
+            <p style={{ margin: '0 0 14px', fontSize: 15, fontWeight: 700, color: '#202124' }}>Add Comment</p>
+            <textarea
+              autoFocus
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              placeholder="Enter comment…"
+              rows={3}
+              style={{
+                width: '100%', boxSizing: 'border-box', borderRadius: 12,
+                border: '1.5px solid #e8eaed', padding: '10px 12px',
+                fontSize: 15, resize: 'none', fontFamily: 'inherit',
+                color: '#202124', outline: 'none', marginBottom: 12,
+              }}
+            />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => { setShowCommentModal(false); setComment('') }}
+                style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!comment.trim()) return
+                  setSavingComment(true)
+                  await supabase.from('logbook_entries').insert({
+                    trip_id: tripId,
+                    event_type: 'comment',
+                    comment: comment.trim(),
+                    recorded_at: new Date().toISOString(),
+                    lat: currentPosition?.lat ?? null,
+                    lng: currentPosition?.lng ?? null,
+                  })
+                  setSavingComment(false)
+                  setComment('')
+                  setShowCommentModal(false)
+                }}
+                disabled={savingComment || !comment.trim()}
+                style={{
+                  flex: 1, padding: '13px 0', borderRadius: 12, border: 'none',
+                  background: savingComment || !comment.trim() ? '#dadce0' : '#1a73e8',
+                  color: savingComment || !comment.trim() ? '#9aa0a6' : '#fff',
+                  fontSize: 15, fontWeight: 600, cursor: !comment.trim() ? 'default' : 'pointer',
+                }}
+              >
+                {savingComment ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stop confirmation modal */}
       {showStopConfirm && (
