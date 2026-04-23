@@ -130,7 +130,16 @@ export default function TrackingPage() {
       <header style={{ background: '#fff', borderBottom: '1px solid #e8eaed', flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <div style={{ maxWidth: 520, margin: '0 auto', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', gap: 10 }}>
           <WayLogIcon size={28} instanceId="header" />
-          <span style={{ fontSize: 18, fontWeight: 700, color: '#202124', letterSpacing: '-0.3px' }}>Logbook Nadira</span>
+          <span style={{ position: 'relative', fontSize: 18, fontWeight: 700, color: '#202124', letterSpacing: '-0.3px' }}>
+            Logbook Nadira
+            {tracking && (
+              <span style={{
+                position: 'absolute', top: 1, right: -10,
+                width: 7, height: 7, borderRadius: '50%',
+                background: '#ea4335', display: 'inline-block',
+              }} />
+            )}
+          </span>
           <button
             onClick={() => supabase.auth.signOut().then(() => { window.location.href = '/login' })}
             style={{ marginLeft: 'auto', fontSize: 13, color: '#5f6368', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 6 }}
@@ -150,15 +159,6 @@ export default function TrackingPage() {
               color: status === 'error' ? '#ea4335' : '#1a73e8',
             }}>
               {statusMsg}
-            </div>
-          )}
-
-          {tracking && (
-            <div style={{ textAlign: 'center', marginBottom: 12 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 500, color: '#ea4335', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ea4335', display: 'inline-block' }} />
-                Recording
-              </span>
             </div>
           )}
 
@@ -215,7 +215,7 @@ export default function TrackingPage() {
               <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 Log Event
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gridTemplateRows: 'auto auto', gridAutoFlow: 'column', gap: 8, marginBottom: 8 }}>
                 {EVENTS.map(type => {
                   const s = EVENT_STYLE[type]
                   const isConfirmed = confirmed === type
