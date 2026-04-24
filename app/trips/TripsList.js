@@ -1,338 +1,15 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import Link from 'next/link'
+import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { softDeleteLeg } from '@/lib/db/legs'
+import { formatDate } from '@/lib/format'
+import LegRow from '@/components/LegRow'
+import TripCard from '@/components/TripCard'
+import EditTripModal from '@/components/EditTripModal'
+import CreateTripModal from '@/components/CreateTripModal'
+import ConfirmModal from '@/components/ConfirmModal'
 
-function formatDate(isoString) {
-  return new Date(isoString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-function formatDuration(seconds) {
-  if (!seconds) return '—'
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
-
-// ── Swipeable leg row ──────────────────────────────────────────────
-function LegRow({ leg, tripId, isFirst, onDelete }) {
-  const [offsetX, setOffsetX] = useState(0)
-  const [isDragging, setIsDragging] = useState(false)
-  const touchStartX = useRef(null)
-  const touchStartY = useRef(null)
-  const isHorizontal = useRef(false)
-  const REVEAL_THRESHOLD = 60
-  const DELETE_BTN_WIDTH = 80
-
-  function onTouchStart(e) {
-    touchStartX.current = e.touches[0].clientX
-    touchStartY.current = e.touches[0].clientY
-    isHorizontal.current = false
-    setIsDragging(true)
-  }
-
-  function onTouchMove(e) {
-    if (touchStartX.current === null) return
-    const dx = e.touches[0].clientX - touchStartX.current
-    const dy = e.touches[0].clientY - touchStartY.current
-    if (!isHorizontal.current) {
-      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return
-      isHorizontal.current = Math.abs(dx) > Math.abs(dy)
-      if (!isHorizontal.current) return
-    }
-    e.preventDefault()
-    setOffsetX(Math.min(0, Math.max(-DELETE_BTN_WIDTH, dx)))
-  }
-
-  function onTouchEnd() {
-    setIsDragging(false)
-    setOffsetX(offsetX < -REVEAL_THRESHOLD ? -DELETE_BTN_WIDTH : 0)
-    touchStartX.current = null
-  }
-
-  const href = tripId ? `/legs/${leg.id}?from=${tripId}` : `/legs/${leg.id}`
-
-  return (
-    <div style={{ position: 'relative', overflow: 'hidden', borderTop: isFirst ? 'none' : '1px solid #f1f3f4' }}
-      onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
-      <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: DELETE_BTN_WIDTH, background: '#ea4335', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <button onClick={() => onDelete(leg)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', width: '100%', height: '100%' }}>
-          Delete
-        </button>
-      </div>
-      <Link
-        href={href}
-        onClick={e => { if (offsetX !== 0) { e.preventDefault(); setOffsetX(0) } }}
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '14px 16px', textDecoration: 'none', background: '#fff',
-          transform: `translateX(${offsetX}px)`,
-          transition: isDragging ? 'none' : 'transform 0.25s ease',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#202124' }}>
-              {formatDate(leg.started_at)}
-            </p>
-            {!leg.ended_at && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#ea4335', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ea4335', display: 'inline-block' }} />
-                Recording
-              </span>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 12, marginTop: 3 }}>
-            <span style={{ fontSize: 13, color: '#5f6368' }}>{leg.distance_nm != null ? `${leg.distance_nm.toFixed(1)} NM` : '— NM'}</span>
-            <span style={{ fontSize: 13, color: '#5f6368' }}>{leg.ended_at ? formatDuration(leg.duration_seconds) : 'In progress'}</span>
-            {leg.distance_nm != null && leg.duration_seconds > 0 && (
-              <span style={{ fontSize: 13, color: '#5f6368' }}>{(leg.distance_nm / (leg.duration_seconds / 3600)).toFixed(1)} kn avg</span>
-            )}
-          </div>
-        </div>
-        <svg width="8" height="13" viewBox="0 0 8 13" fill="none">
-          <path d="M1 1l6 5.5L1 12" stroke="#c7c7cc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </Link>
-    </div>
-  )
-}
-
-// ── Trip header card (named trip) ─────────────────────────────────
-function TripCard({ trip, legs, onEdit, onDeleteLeg }) {
-  const [expanded, setExpanded] = useState(false)
-  const totalNm = legs.reduce((s, l) => s + (l.distance_nm ?? 0), 0)
-  const totalSeconds = legs.reduce((s, l) => s + (l.duration_seconds ?? 0), 0)
-
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ position: 'relative', background: '#1a73e8', borderRadius: expanded && legs.length > 0 ? '16px 16px 0 0' : 16 }}>
-        <Link
-          href={`/trips/${trip.id}`}
-          style={{ display: 'block', textDecoration: 'none', padding: '14px 80px 14px 16px' }}
-        >
-          <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#fff' }}>{trip.name}</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px' }}>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
-              {formatDate(trip.start_date)} – {formatDate(trip.end_date)}
-            </span>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
-              {legs.length} {legs.length === 1 ? 'leg' : 'legs'}
-            </span>
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
-              {totalNm > 0 ? `${totalNm.toFixed(1)} NM` : '— NM'}
-            </span>
-            {totalSeconds > 0 && (
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>
-                {formatDuration(totalSeconds)}
-              </span>
-            )}
-          </div>
-        </Link>
-
-        {/* Collapse toggle */}
-        {legs.length > 0 && (
-          <button
-            onClick={() => setExpanded(v => !v)}
-            style={{ position: 'absolute', top: '50%', right: 42, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 6, lineHeight: 0 }}
-            aria-label={expanded ? 'Collapse legs' : 'Expand legs'}
-          >
-            <svg
-              width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="rgba(255,255,255,0.9)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
-            >
-              <path d="M6 9l6 6 6-6"/>
-            </svg>
-          </button>
-        )}
-
-        {/* Edit pencil */}
-        <button
-          onClick={e => { e.preventDefault(); onEdit(trip) }}
-          style={{ position: 'absolute', top: '50%', right: 12, transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 6, lineHeight: 0 }}
-          aria-label="Edit trip"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-        </button>
-      </div>
-
-      {expanded && legs.length > 0 && (
-        <div style={{ background: '#fff', borderRadius: '0 0 16px 16px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          {legs.map((leg, i) => (
-            <LegRow key={leg.id} leg={leg} tripId={trip.id} isFirst={i === 0} onDelete={leg => onDeleteLeg(leg, trip.id)} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Edit Trip modal ───────────────────────────────────────────────
-function EditTripModal({ trip, onClose, onSaved }) {
-  const [name, setName] = useState(trip.name)
-  const [startDate, setStartDate] = useState(trip.start_date)
-  const [endDate, setEndDate] = useState(trip.end_date)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-
-  async function handleSave() {
-    if (!name.trim() || !startDate || !endDate) return
-    if (endDate < startDate) { setError('End date must be after start date.'); return }
-    setSaving(true)
-    const { error: err } = await supabase.from('trips').update({
-      name: name.trim(),
-      start_date: startDate,
-      end_date: endDate,
-    }).eq('id', trip.id)
-    if (err) { setError('Could not save changes.'); setSaving(false); return }
-    onSaved()
-    onClose()
-  }
-
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 340, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-        <p style={{ margin: '0 0 20px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Edit Trip</p>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Name</label>
-        <input
-          autoFocus
-          value={name}
-          onChange={e => setName(e.target.value)}
-          style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1px solid #e8eaed', fontSize: 15, outline: 'none', marginBottom: 14 }}
-        />
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Start date</label>
-        <input
-          type="date"
-          value={startDate}
-          onChange={e => setStartDate(e.target.value)}
-          style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1px solid #e8eaed', fontSize: 15, outline: 'none', marginBottom: 14 }}
-        />
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>End date</label>
-        <input
-          type="date"
-          value={endDate}
-          onChange={e => setEndDate(e.target.value)}
-          style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1px solid #e8eaed', fontSize: 15, outline: 'none', marginBottom: error ? 8 : 20 }}
-        />
-        {error && <p style={{ margin: '0 0 12px', fontSize: 13, color: '#ea4335', textAlign: 'center' }}>{error}</p>}
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || !name.trim() || !startDate || !endDate}
-            style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: 'none', background: saving || !name.trim() ? '#dadce0' : '#1a73e8', color: saving || !name.trim() ? '#9aa0a6' : '#fff', fontSize: 15, fontWeight: 600, cursor: saving ? 'wait' : 'pointer' }}
-          >
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Create Trip modal ─────────────────────────────────────────────
-function CreateTripModal({ onClose, onCreated }) {
-  const [step, setStep] = useState('name') // 'name' | 'dates'
-  const [name, setName] = useState('')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-
-  async function handleCreate() {
-    if (!name.trim() || !startDate || !endDate) return
-    if (endDate < startDate) { setError('End date must be after start date.'); return }
-    setSaving(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    const { error: err } = await supabase.from('trips').insert({
-      user_id: user.id,
-      name: name.trim(),
-      start_date: startDate,
-      end_date: endDate,
-    })
-    if (err) { setError('Could not save trip.'); setSaving(false); return }
-    onCreated()
-    onClose()
-  }
-
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 340, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-
-        {step === 'name' && (
-          <>
-            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>New Trip</p>
-            <p style={{ margin: '0 0 20px', fontSize: 14, color: '#5f6368', textAlign: 'center' }}>Give this trip a name</p>
-            <input
-              autoFocus
-              value={name}
-              onChange={e => setName(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && name.trim()) setStep('dates') }}
-              placeholder="e.g. Croatia 2025"
-              style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1px solid #e8eaed', fontSize: 15, outline: 'none', marginBottom: 16 }}
-            />
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={onClose} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-                Cancel
-              </button>
-              <button
-                onClick={() => name.trim() && setStep('dates')}
-                disabled={!name.trim()}
-                style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: 'none', background: name.trim() ? '#1a73e8' : '#dadce0', color: name.trim() ? '#fff' : '#9aa0a6', fontSize: 15, fontWeight: 600, cursor: name.trim() ? 'pointer' : 'default' }}
-              >
-                Next
-              </button>
-            </div>
-          </>
-        )}
-
-        {step === 'dates' && (
-          <>
-            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>{name}</p>
-            <p style={{ margin: '0 0 20px', fontSize: 14, color: '#5f6368', textAlign: 'center' }}>Select the date range</p>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Start date</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1px solid #e8eaed', fontSize: 15, outline: 'none', marginBottom: 14 }}
-            />
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>End date</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={e => setEndDate(e.target.value)}
-              style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: 12, border: '1px solid #e8eaed', fontSize: 15, outline: 'none', marginBottom: error ? 8 : 16 }}
-            />
-            {error && <p style={{ margin: '0 0 12px', fontSize: 13, color: '#ea4335', textAlign: 'center' }}>{error}</p>}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { setStep('name'); setError('') }} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-                Back
-              </button>
-              <button
-                onClick={handleCreate}
-                disabled={saving || !startDate || !endDate}
-                style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: 'none', background: saving || !startDate || !endDate ? '#dadce0' : '#1a73e8', color: saving || !startDate || !endDate ? '#9aa0a6' : '#fff', fontSize: 15, fontWeight: 600, cursor: saving || !startDate || !endDate ? 'default' : 'pointer' }}
-              >
-                {saving ? 'Saving…' : 'Create'}
-              </button>
-            </div>
-          </>
-        )}
-
-      </div>
-    </div>
-  )
-}
-
-// ── Main list ─────────────────────────────────────────────────────
 export default function TripsList({ grouped, standaloneLegs, onRefresh }) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editTrip, setEditTrip] = useState(null)
@@ -348,8 +25,7 @@ export default function TripsList({ grouped, standaloneLegs, onRefresh }) {
   async function confirmDeleteLeg() {
     if (!confirmLeg) return
     setDeleting(true)
-    const { leg } = confirmLeg
-    await supabase.from('legs').update({ deleted_at: new Date().toISOString() }).eq('id', leg.id)
+    await softDeleteLeg(supabase, confirmLeg.leg.id)
     setConfirmLeg(null)
     setDeleting(false)
     onRefresh()
@@ -359,7 +35,6 @@ export default function TripsList({ grouped, standaloneLegs, onRefresh }) {
 
   return (
     <>
-      {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           {totalLegs} {totalLegs === 1 ? 'Leg' : 'Legs'}
@@ -372,12 +47,10 @@ export default function TripsList({ grouped, standaloneLegs, onRefresh }) {
         </button>
       </div>
 
-      {/* Named trips */}
       {grouped.map(({ trip, legs: tripLegs }) => (
         <TripCard key={trip.id} trip={trip} legs={tripLegs} onEdit={setEditTrip} onDeleteLeg={handleDeleteLegRequest} />
       ))}
 
-      {/* Standalone legs */}
       {standaloneLegs.length > 0 && (
         <>
           {grouped.length > 0 && (
@@ -401,55 +74,32 @@ export default function TripsList({ grouped, standaloneLegs, onRefresh }) {
         </div>
       )}
 
-      {/* Create trip modal */}
       {showCreateModal && (
-        <CreateTripModal
-          onClose={() => setShowCreateModal(false)}
-          onCreated={onRefresh}
-        />
+        <CreateTripModal onClose={() => setShowCreateModal(false)} onCreated={onRefresh} />
       )}
 
       {editTrip && (
-        <EditTripModal
-          trip={editTrip}
-          onClose={() => setEditTrip(null)}
-          onSaved={onRefresh}
+        <EditTripModal trip={editTrip} onClose={() => setEditTrip(null)} onSaved={onRefresh} />
+      )}
+
+      {warnLeg && (
+        <ConfirmModal
+          title="Leg Still Recording"
+          body="This leg is currently active. Stop it on the Tracking tab before deleting."
+          onCancel={() => setWarnLeg(null)}
         />
       )}
 
-      {/* Warn: live leg cannot be deleted */}
-      {warnLeg && (
-        <div onClick={() => setWarnLeg(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 320, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Leg Still Recording</p>
-            <p style={{ margin: '0 0 24px', fontSize: 14, color: '#5f6368', textAlign: 'center', lineHeight: 1.5 }}>
-              This leg is currently active. Stop it on the Tracking tab before deleting.
-            </p>
-            <button onClick={() => setWarnLeg(null)} style={{ width: '100%', padding: '13px 0', borderRadius: 12, border: 'none', background: '#1a73e8', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-              OK
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm delete leg */}
       {confirmLeg && (
-        <div onClick={() => !deleting && setConfirmLeg(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 320, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}>
-            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Remove Leg?</p>
-            <p style={{ margin: '0 0 24px', fontSize: 14, color: '#5f6368', textAlign: 'center', lineHeight: 1.5 }}>
-              {formatDate(confirmLeg.leg.started_at)} — this leg will be moved to the deleted archive and can be restored from the More tab.
-            </p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setConfirmLeg(null)} disabled={deleting} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-                Cancel
-              </button>
-              <button onClick={confirmDeleteLeg} disabled={deleting} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: 'none', background: deleting ? '#dadce0' : '#ea4335', color: '#fff', fontSize: 15, fontWeight: 600, cursor: deleting ? 'wait' : 'pointer' }}>
-                {deleting ? 'Deleting…' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          title="Remove Leg?"
+          body={`${formatDate(confirmLeg.leg.started_at)} — this leg will be moved to the deleted archive and can be restored from the More tab.`}
+          confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+          destructive
+          loading={deleting}
+          onConfirm={confirmDeleteLeg}
+          onCancel={() => !deleting && setConfirmLeg(null)}
+        />
       )}
     </>
   )

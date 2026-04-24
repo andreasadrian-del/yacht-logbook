@@ -163,24 +163,24 @@ _Estimated effort: 2–3 hours. Component size rule._
 
 **Extract to `/components/`:**
 
-- [ ] `components/LegRow.js` — extract the `LegRow` function from `TripsList.js`; pure rendering + swipe gesture; receives `leg`, `tripId`, `isFirst`, `onDelete` as props
-- [ ] `components/TripCard.js` — extract the `TripCard` function from `TripsList.js`; receives `trip`, `legs`, `onEdit`, `onDeleteLeg` as props
-- [ ] `components/EditTripModal.js` — extract the `EditTripModal` function from `TripsList.js`; receives `trip`, `onClose`, `onSaved`; wire Supabase call to `updateTrip` from `lib/db/trips.js`
-- [ ] `components/CreateTripModal.js` — extract the `CreateTripModal` function from `TripsList.js`; receives `onClose`, `onCreated`; wire Supabase call to `createTrip` from `lib/db/trips.js`
-- [ ] `components/ConfirmModal.js` — shared confirm dialog used in TripsList (delete leg confirm) and more/page.js (hard delete confirm); receives `title`, `body`, `confirmLabel`, `confirmStyle`, `onConfirm`, `onCancel`, `loading`
+- [x] `components/LegRow.js` — extract the `LegRow` function from `TripsList.js`; pure rendering + swipe gesture; receives `leg`, `tripId`, `isFirst`, `onDelete` as props
+- [x] `components/TripCard.js` — extract the `TripCard` function from `TripsList.js`; receives `trip`, `legs`, `onEdit`, `onDeleteLeg` as props
+- [x] `components/EditTripModal.js` — extract the `EditTripModal` function from `TripsList.js`; receives `trip`, `onClose`, `onSaved`; wire Supabase call to `updateTrip` from `lib/db/trips.js`
+- [x] `components/CreateTripModal.js` — extract the `CreateTripModal` function from `TripsList.js`; receives `onClose`, `onCreated`; wire Supabase call to `createTrip` from `lib/db/trips.js`
+- [x] `components/ConfirmModal.js` — shared confirm dialog used in TripsList (delete leg confirm) and more/page.js (hard delete confirm); receives `title`, `body`, `confirmLabel`, `confirmStyle`, `onConfirm`, `onCancel`, `loading`
 
 **Update `TripsList.js`:**
 
-- [ ] Replace inline components with imports from `/components/`
-- [ ] Wire delete leg to `softDeleteLeg` from `lib/db/legs.js`
-- [ ] Verify `TripsList.js` is under 200 lines after extraction
-- [ ] Verify each extracted component is under 200 lines
+- [x] Replace inline components with imports from `/components/`
+- [x] Wire delete leg to `softDeleteLeg` from `lib/db/legs.js`
+- [x] Verify `TripsList.js` is under 200 lines after extraction
+- [x] Verify each extracted component is under 200 lines
 
 **Verify:**
 
-- [ ] `npm test` passes
+- [x] `npm test` passes
 - [ ] All Trips tab: create trip, edit trip, expand/collapse, delete leg all work
-- [ ] Commit: "Split TripsList into components — LegRow, TripCard, modals"
+- [x] Commit: "Split TripsList into components — LegRow, TripCard, modals"
 
 ---
 
@@ -236,7 +236,7 @@ Audit every write path and confirm it handles errors visibly.
 - [x] Phase 2a complete — `npm test` green, legs.js + trips.js covered
 - [x] Phase 2b complete — `npm test` green, all five db files covered
 - [x] Phase 3 complete — `npm test` green, grouping tests passing, Route Handler in place
-- [ ] Phase 4 complete — no file over 200 lines in app/ or components/
+- [x] Phase 4 complete — no file over 200 lines in app/ or components/
 - [ ] Phase 5 complete — no direct Supabase calls outside lib/db/ (except trips/page.js real-time subscription)
 - [ ] Phase 6 complete — all write paths surface errors
 - [ ] CLAUDE.md updated to reflect completed state
