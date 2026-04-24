@@ -81,30 +81,30 @@ _Estimated effort: 1–2 hours. Lower complexity; depends on 2a pattern being es
 
 ### `lib/db/track-points.js`
 
-- [ ] `insertTrackPoints(supabase, legId, points)` — batch insert array of `{ recorded_at, lat, lng, speed, course }`
-- [ ] `getTrackPoints(supabase, legId)` — ordered by `recorded_at`; selects `lat, lng, speed, course, recorded_at`
-- [ ] `getTrackPointsForLegs(supabase, legIds)` — batch fetch for multiple legs; selects `lat, lng, trip_id`; ordered by `recorded_at`
-- [ ] `deleteTrackPoints(supabase, legId)` — hard delete all points for a leg
+- [x] `insertTrackPoints(supabase, legId, points)` — batch insert array of `{ recorded_at, lat, lng, speed, course }`
+- [x] `getTrackPoints(supabase, legId)` — ordered by `recorded_at`; selects `lat, lng, speed, course, recorded_at`
+- [x] `getTrackPointsForLegs(supabase, legIds)` — batch fetch for multiple legs; selects `lat, lng, trip_id`; ordered by `recorded_at`
+- [x] `deleteTrackPoints(supabase, legId)` — hard delete all points for a leg
 
 ### `lib/db/logbook-entries.js`
 
-- [ ] `insertLogbookEntry(supabase, { legId, eventType, recordedAt, lat, lng, comment })` — insert
-- [ ] `getLogbookEntries(supabase, legId)` — ordered by `recorded_at`
-- [ ] `deleteLogbookEntries(supabase, legId)` — hard delete all entries for a leg
+- [x] `insertLogbookEntry(supabase, { legId, eventType, recordedAt, lat, lng, comment })` — insert
+- [x] `getLogbookEntries(supabase, legId)` — ordered by `recorded_at`
+- [x] `deleteLogbookEntries(supabase, legId)` — hard delete all entries for a leg
 
 ### `lib/db/trip-notes.js`
 
-- [ ] `insertNote(supabase, legId, content)` — insert; returns new row
-- [ ] `getNotes(supabase, legId)` — ordered by `created_at`
-- [ ] `deleteNotes(supabase, legId)` — hard delete all notes for a leg
+- [x] `insertNote(supabase, legId, content)` — insert; returns new row
+- [x] `getNotes(supabase, legId)` — ordered by `created_at`
+- [x] `deleteNotes(supabase, legId)` — hard delete all notes for a leg
 
 ### Tests
 
-- [ ] `__tests__/lib/db/track-points.test.js` — include test that `getTrackPoints` applies `parseFloat` to lat/lng before returning
-- [ ] `__tests__/lib/db/logbook-entries.test.js` — happy path, error path, correct filter
-- [ ] `__tests__/lib/db/trip-notes.test.js` — same pattern
-- [ ] `npm test` passes before committing
-- [ ] Commit: "Add lib/db/ supporting entities (track-points, logbook-entries, trip-notes) with unit tests"
+- [x] `__tests__/lib/db/track-points.test.js` — include test that `getTrackPoints` applies `parseFloat` to lat/lng before returning
+- [x] `__tests__/lib/db/logbook-entries.test.js` — happy path, error path, correct filter
+- [x] `__tests__/lib/db/trip-notes.test.js` — same pattern
+- [x] `npm test` passes before committing
+- [x] Commit: "Add lib/db/ supporting entities (track-points, logbook-entries, trip-notes) with unit tests"
 
 ---
 
@@ -234,7 +234,7 @@ Audit every write path and confirm it handles errors visibly.
 - [x] Phase 0 complete
 - [x] Phase 1 complete
 - [x] Phase 2a complete — `npm test` green, legs.js + trips.js covered
-- [ ] Phase 2b complete — `npm test` green, all five db files covered
+- [x] Phase 2b complete — `npm test` green, all five db files covered
 - [ ] Phase 3 complete — `npm test` green, grouping tests passing, Route Handler in place
 - [ ] Phase 4 complete — no file over 200 lines in app/ or components/
 - [ ] Phase 5 complete — no direct Supabase calls outside lib/db/ (except trips/page.js real-time subscription)
