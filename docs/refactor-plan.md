@@ -49,30 +49,30 @@ Create `lib/db/legs.js` and `lib/db/trips.js`. Each function wraps a Supabase ca
 
 ### `lib/db/legs.js`
 
-- [ ] `getLegs(supabase)` — active (non-deleted) legs, ordered by `started_at` desc; selects `id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng`
-- [ ] `getLeg(supabase, id, userId)` — single leg by id + user_id guard
-- [ ] `getDeletedLegs(supabase)` — legs where `deleted_at IS NOT NULL`, ordered by `deleted_at` desc
-- [ ] `createLeg(supabase, userId)` — insert with `started_at` and `user_id`; returns new row
-- [ ] `updateLegPosition(supabase, id, lat, lng)` — update `last_lat`, `last_lng`
-- [ ] `stopLeg(supabase, id, { endedAt, durationSeconds, distanceNm, lastLat, lastLng })` — update all stop fields
-- [ ] `softDeleteLeg(supabase, id)` — set `deleted_at = now()`
-- [ ] `restoreLeg(supabase, id)` — set `deleted_at = null`
-- [ ] `hardDeleteLeg(supabase, id)` — deletes track_points, logbook_entries, trip_notes, then legs row (in that order)
+- [x] `getLegs(supabase)` — active (non-deleted) legs, ordered by `started_at` desc; selects `id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng`
+- [x] `getLeg(supabase, id, userId)` — single leg by id + user_id guard
+- [x] `getDeletedLegs(supabase)` — legs where `deleted_at IS NOT NULL`, ordered by `deleted_at` desc
+- [x] `createLeg(supabase, userId)` — insert with `started_at` and `user_id`; returns new row
+- [x] `updateLegPosition(supabase, id, lat, lng)` — update `last_lat`, `last_lng`
+- [x] `stopLeg(supabase, id, { endedAt, durationSeconds, distanceNm, lastLat, lastLng })` — update all stop fields
+- [x] `softDeleteLeg(supabase, id)` — set `deleted_at = now()`
+- [x] `restoreLeg(supabase, id)` — set `deleted_at = null`
+- [x] `hardDeleteLeg(supabase, id)` — deletes track_points, logbook_entries, trip_notes, then legs row (in that order)
 
 ### `lib/db/trips.js`
 
-- [ ] `getTrips(supabase)` — all trips ordered by `start_date` desc
-- [ ] `getTrip(supabase, id, userId)` — single trip by id + user_id guard
-- [ ] `createTrip(supabase, { userId, name, startDate, endDate })` — insert
-- [ ] `updateTrip(supabase, id, { name, startDate, endDate })` — update
-- [ ] `deleteTrip(supabase, id)` — hard delete
+- [x] `getTrips(supabase)` — all trips ordered by `start_date` desc
+- [x] `getTrip(supabase, id, userId)` — single trip by id + user_id guard
+- [x] `createTrip(supabase, { userId, name, startDate, endDate })` — insert
+- [x] `updateTrip(supabase, id, { name, startDate, endDate })` — update
+- [x] `deleteTrip(supabase, id)` — hard delete
 
 ### Tests
 
-- [ ] `__tests__/lib/db/legs.test.js` — mock Supabase client; test each function: happy path, error path, correct filter applied
-- [ ] `__tests__/lib/db/trips.test.js` — same pattern
-- [ ] `npm test` passes before committing
-- [ ] Commit: "Add lib/db/legs.js and lib/db/trips.js with unit tests"
+- [x] `__tests__/lib/db/legs.test.js` — mock Supabase client; test each function: happy path, error path, correct filter applied
+- [x] `__tests__/lib/db/trips.test.js` — same pattern
+- [x] `npm test` passes before committing
+- [x] Commit: "Add lib/db/legs.js and lib/db/trips.js with unit tests"
 
 ---
 
@@ -233,7 +233,7 @@ Audit every write path and confirm it handles errors visibly.
 
 - [x] Phase 0 complete
 - [x] Phase 1 complete
-- [ ] Phase 2a complete — `npm test` green, legs.js + trips.js covered
+- [x] Phase 2a complete — `npm test` green, legs.js + trips.js covered
 - [ ] Phase 2b complete — `npm test` green, all five db files covered
 - [ ] Phase 3 complete — `npm test` green, grouping tests passing, Route Handler in place
 - [ ] Phase 4 complete — no file over 200 lines in app/ or components/
