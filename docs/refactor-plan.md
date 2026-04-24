@@ -190,18 +190,18 @@ _Estimated effort: 1–2 hours. Clears the three exceptions listed in CLAUDE.md.
 These three files are listed as known exceptions but should be migrated once the db layer exists.
 
 ### `app/more/page.js`
-- [ ] Replace `supabase.from('legs').not(...)` with `getDeletedLegs` from `lib/db/legs.js`
-- [ ] Replace restore call with `restoreLeg` from `lib/db/legs.js`
-- [ ] Replace the four-step hard delete sequence with `hardDeleteLeg` from `lib/db/legs.js`
-- [ ] Replace `ConfirmModal` inline markup with shared `components/ConfirmModal.js`
+- [x] Replace `supabase.from('legs').not(...)` with `getDeletedLegs` from `lib/db/legs.js`
+- [x] Replace restore call with `restoreLeg` from `lib/db/legs.js`
+- [x] Replace the four-step hard delete sequence with `hardDeleteLeg` from `lib/db/legs.js`
+- [x] Replace `ConfirmModal` inline markup with shared `components/ConfirmModal.js`
 
 ### `app/legs/[id]/LegDetailView.js`
-- [ ] Replace inline `supabase.from('trip_notes').insert(...)` with `insertNote` from `lib/db/trip-notes.js`
+- [x] Replace inline `supabase.from('trip_notes').insert(...)` with `insertNote` from `lib/db/trip-notes.js`
 
 ### Update CLAUDE.md
-- [ ] Remove the three exceptions from the Architecture Direction section (they're no longer exceptions)
-- [ ] `npm test` passes
-- [ ] Commit: "Wire more/page and LegDetailView to /lib/db/; clear exceptions from CLAUDE.md"
+- [x] Remove the three exceptions from the Architecture Direction section (they're no longer exceptions)
+- [x] `npm test` passes
+- [x] Commit: "Wire more/page and LegDetailView to /lib/db/; clear exceptions from CLAUDE.md"
 
 ---
 
@@ -237,7 +237,7 @@ Audit every write path and confirm it handles errors visibly.
 - [x] Phase 2b complete — `npm test` green, all five db files covered
 - [x] Phase 3 complete — `npm test` green, grouping tests passing, Route Handler in place
 - [x] Phase 4 complete — no file over 200 lines in app/ or components/
-- [ ] Phase 5 complete — no direct Supabase calls outside lib/db/ (except trips/page.js real-time subscription)
+- [x] Phase 5 complete — no direct Supabase calls outside lib/db/ (except trips/page.js real-time subscription)
 - [ ] Phase 6 complete — all write paths surface errors
 - [ ] CLAUDE.md updated to reflect completed state
 - [ ] `v2.0-refactored` git tag created

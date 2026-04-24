@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import LegMap from './LegMap'
 import { supabase } from '@/lib/supabase'
+import { insertNote } from '@/lib/db/trip-notes'
 
 const EVENT_LABELS = { tack: 'Tack', jibe: 'Jibe', reef: 'Reef', unreef: 'Unreef', 'engine on': 'Engine On', 'engine off': 'Engine Off' }
 
@@ -44,11 +45,7 @@ export default function LegDetailView({ leg, intervals, points, entries, initial
     const content = newNote.trim()
     if (!content) return
     setSavingNote(true)
-    const { data, error } = await supabase
-      .from('trip_notes')
-      .insert({ trip_id: leg.id, content })
-      .select()
-      .single()
+    const { data, error } = await insertNote(supabase, leg.id, content)
     if (!error && data) {
       setNotes(prev => [...prev, data])
       setNewNote('')

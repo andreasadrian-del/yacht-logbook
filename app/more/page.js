@@ -2,19 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import { getDeletedLegs, restoreLeg, hardDeleteLeg } from '@/lib/db/legs'
+import { formatDate, formatDuration } from '@/lib/format'
+import ConfirmModal from '@/components/ConfirmModal'
 import BottomNav from '@/app/BottomNav'
 import WayLogIcon from '@/app/WayLogIcon'
-
-function formatDate(isoString) {
-  return new Date(isoString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-function formatDuration(seconds) {
-  if (!seconds) return '—'
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  return h > 0 ? `${h}h ${m}m` : `${m}m`
-}
 
 function DeletedLegRow({ leg, isFirst, onRestore, onHardDelete }) {
   const [offsetX, setOffsetX] = useState(0)
@@ -119,11 +111,7 @@ export default function MorePage() {
   const [deleting, setDeleting] = useState(false)
 
   const fetchDeleted = useCallback(async () => {
-    const { data } = await supabase
-      .from('legs')
-      .select('id, started_at, ended_at, duration_seconds, distance_nm, deleted_at')
-      .not('deleted_at', 'is', null)
-      .order('deleted_at', { ascending: false })
+    const { data } = await getDeletedLegs(supabase)
     setDeletedLegs(data ?? [])
   }, [])
 
@@ -137,7 +125,7 @@ export default function MorePage() {
   }, [fetchDeleted])
 
   async function handleRestore(leg) {
-    await supabase.from('legs').update({ deleted_at: null }).eq('id', leg.id)
+    await restoreLeg(supabase, leg.id)
     fetchDeleted()
   }
 
@@ -148,11 +136,7 @@ export default function MorePage() {
   async function confirmHardDelete() {
     if (!confirmLeg) return
     setDeleting(true)
-    const id = confirmLeg.id
-    await supabase.from('track_points').delete().eq('trip_id', id)
-    await supabase.from('logbook_entries').delete().eq('trip_id', id)
-    await supabase.from('trip_notes').delete().eq('trip_id', id)
-    await supabase.from('legs').delete().eq('id', id)
+    await hardDeleteLeg(supabase, confirmLeg.id)
     setConfirmLeg(null)
     setDeleting(false)
     fetchDeleted()
@@ -209,38 +193,16 @@ export default function MorePage() {
         </div>
       </div>
 
-      {/* Confirm permanent delete */}
       {confirmLeg && (
-        <div
-          onClick={() => !deleting && setConfirmLeg(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 320, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
-          >
-            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Permanently Delete?</p>
-            <p style={{ margin: '0 0 24px', fontSize: 14, color: '#5f6368', textAlign: 'center', lineHeight: 1.5 }}>
-              {formatDate(confirmLeg.started_at)} — this will permanently delete all track points and log entries. This cannot be undone.
-            </p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button
-                onClick={() => setConfirmLeg(null)}
-                disabled={deleting}
-                style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmHardDelete}
-                disabled={deleting}
-                style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: 'none', background: deleting ? '#dadce0' : '#ea4335', color: '#fff', fontSize: 15, fontWeight: 600, cursor: deleting ? 'wait' : 'pointer' }}
-              >
-                {deleting ? 'Deleting…' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          title="Permanently Delete?"
+          body={`${formatDate(confirmLeg.started_at)} — this will permanently delete all track points and log entries. This cannot be undone.`}
+          confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+          destructive
+          loading={deleting}
+          onConfirm={confirmHardDelete}
+          onCancel={() => !deleting && setConfirmLeg(null)}
+        />
       )}
 
       <BottomNav />
