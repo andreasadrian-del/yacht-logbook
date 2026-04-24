@@ -21,9 +21,9 @@ The phases are ordered so each one builds on the last and the app stays shippabl
 ## Phase 0 — Remove dead code
 _Estimated effort: 15 minutes. No risk._
 
-- [ ] Delete `app/log/page.js` (Log Entry tab was removed; file is unused)
-- [ ] Verify no import or link anywhere references `/log` after deletion
-- [ ] Commit: "Remove dead app/log/page.js"
+- [x] Delete `app/log/page.js` (Log Entry tab was removed; file is unused)
+- [x] Verify no import or link anywhere references `/log` after deletion
+- [x] Commit: "Remove dead app/log/page.js"
 
 ---
 
@@ -231,7 +231,7 @@ Audit every write path and confirm it handles errors visibly.
 
 ## Completion checklist
 
-- [ ] Phase 0 complete
+- [x] Phase 0 complete
 - [ ] Phase 1 complete
 - [ ] Phase 2a complete — `npm test` green, legs.js + trips.js covered
 - [ ] Phase 2b complete — `npm test` green, all five db files covered
