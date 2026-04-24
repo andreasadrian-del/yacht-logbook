@@ -32,13 +32,13 @@ _Estimated effort: 1–2 hours. No app logic changes._
 
 Sets up the test runner so every subsequent phase can add tests as it goes.
 
-- [ ] Install Jest + React Testing Library: `npm install --save-dev jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom`
-- [ ] Add `jest.config.js` at project root (moduleNameMapper for `@/` alias, testEnvironment jsdom)
-- [ ] Add `jest.setup.js` importing `@testing-library/jest-dom`
-- [ ] Add `"test": "jest"` script to `package.json`
-- [ ] Create `__tests__/` directory with a placeholder `README` confirming the path convention: mirrors source path (e.g. `lib/db/legs.js` → `__tests__/lib/db/legs.test.js`)
-- [ ] Verify `npm test` runs with zero tests and exits cleanly
-- [ ] Commit: "Add Jest + Testing Library setup"
+- [x] Install Jest + React Testing Library: `npm install --save-dev jest @testing-library/react @testing-library/jest-dom jest-environment-jsdom`
+- [x] Add `jest.config.js` at project root (moduleNameMapper for `@/` alias, testEnvironment jsdom)
+- [x] Add `jest.setup.js` importing `@testing-library/jest-dom`
+- [x] Add `"test": "jest"` script to `package.json`
+- [x] Create `__tests__/` directory with a placeholder `README` confirming the path convention: mirrors source path (e.g. `lib/db/legs.js` → `__tests__/lib/db/legs.test.js`)
+- [x] Verify `npm test` runs with zero tests and exits cleanly
+- [x] Commit: "Add Jest + Testing Library setup"
 
 ---
 
@@ -232,7 +232,7 @@ Audit every write path and confirm it handles errors visibly.
 ## Completion checklist
 
 - [x] Phase 0 complete
-- [ ] Phase 1 complete
+- [x] Phase 1 complete
 - [ ] Phase 2a complete — `npm test` green, legs.js + trips.js covered
 - [ ] Phase 2b complete — `npm test` green, all five db files covered
 - [ ] Phase 3 complete — `npm test` green, grouping tests passing, Route Handler in place
