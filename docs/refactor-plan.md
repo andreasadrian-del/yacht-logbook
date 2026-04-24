@@ -163,10 +163,10 @@ _Estimated effort: 2–3 hours. Component size rule._
 
 **Extract to `/components/`:**
 
-- [ ] `components/LegRow.js` — extract `LegRow` function (lines 19–100); pure rendering + swipe gesture; receives `leg`, `tripId`, `isFirst`, `onDelete` as props
-- [ ] `components/TripCard.js` — extract `TripCard` function (lines 103–173); receives `trip`, `legs`, `onEdit`, `onDeleteLeg` as props
-- [ ] `components/EditTripModal.js` — extract `EditTripModal` (lines 176–238); receives `trip`, `onClose`, `onSaved`; wire Supabase call to `updateTrip` from `lib/db/trips.js`
-- [ ] `components/CreateTripModal.js` — extract `CreateTripModal` (lines 241–333); receives `onClose`, `onCreated`; wire Supabase call to `createTrip` from `lib/db/trips.js`
+- [ ] `components/LegRow.js` — extract the `LegRow` function from `TripsList.js`; pure rendering + swipe gesture; receives `leg`, `tripId`, `isFirst`, `onDelete` as props
+- [ ] `components/TripCard.js` — extract the `TripCard` function from `TripsList.js`; receives `trip`, `legs`, `onEdit`, `onDeleteLeg` as props
+- [ ] `components/EditTripModal.js` — extract the `EditTripModal` function from `TripsList.js`; receives `trip`, `onClose`, `onSaved`; wire Supabase call to `updateTrip` from `lib/db/trips.js`
+- [ ] `components/CreateTripModal.js` — extract the `CreateTripModal` function from `TripsList.js`; receives `onClose`, `onCreated`; wire Supabase call to `createTrip` from `lib/db/trips.js`
 - [ ] `components/ConfirmModal.js` — shared confirm dialog used in TripsList (delete leg confirm) and more/page.js (hard delete confirm); receives `title`, `body`, `confirmLabel`, `confirmStyle`, `onConfirm`, `onCancel`, `loading`
 
 **Update `TripsList.js`:**
