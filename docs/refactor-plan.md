@@ -42,10 +42,10 @@ Sets up the test runner so every subsequent phase can add tests as it goes.
 
 ---
 
-## Phase 2 — `/lib/db/` layer with unit tests
-_Estimated effort: 3–4 hours. The foundation everything else builds on._
+## Phase 2a — `/lib/db/` core entities with unit tests
+_Estimated effort: 2 hours. The two most important files; everything else depends on them._
 
-Create one file per entity under `lib/db/`. Each function wraps a Supabase call, handles the error, and returns `{ data, error }`. No component logic in here — pure data access.
+Create `lib/db/legs.js` and `lib/db/trips.js`. Each function wraps a Supabase call, handles the error, and returns `{ data, error }`. No component logic — pure data access.
 
 ### `lib/db/legs.js`
 
@@ -67,6 +67,18 @@ Create one file per entity under `lib/db/`. Each function wraps a Supabase call,
 - [ ] `updateTrip(supabase, id, { name, startDate, endDate })` — update
 - [ ] `deleteTrip(supabase, id)` — hard delete
 
+### Tests
+
+- [ ] `__tests__/lib/db/legs.test.js` — mock Supabase client; test each function: happy path, error path, correct filter applied
+- [ ] `__tests__/lib/db/trips.test.js` — same pattern
+- [ ] `npm test` passes before committing
+- [ ] Commit: "Add lib/db/legs.js and lib/db/trips.js with unit tests"
+
+---
+
+## Phase 2b — `/lib/db/` supporting entities with unit tests
+_Estimated effort: 1–2 hours. Lower complexity; depends on 2a pattern being established._
+
 ### `lib/db/track-points.js`
 
 - [ ] `insertTrackPoints(supabase, legId, points)` — batch insert array of `{ recorded_at, lat, lng, speed, course }`
@@ -86,39 +98,61 @@ Create one file per entity under `lib/db/`. Each function wraps a Supabase call,
 - [ ] `getNotes(supabase, legId)` — ordered by `created_at`
 - [ ] `deleteNotes(supabase, legId)` — hard delete all notes for a leg
 
-### Tests (write alongside each file above)
+### Tests
 
-- [ ] `__tests__/lib/db/legs.test.js` — mock Supabase client; test each function: happy path, error path, correct filter applied
-- [ ] `__tests__/lib/db/trips.test.js` — same pattern
-- [ ] `__tests__/lib/db/track-points.test.js` — same pattern; include the `parseFloat` requirement in `getTrackPoints` return
-- [ ] `__tests__/lib/db/logbook-entries.test.js` — same pattern
+- [ ] `__tests__/lib/db/track-points.test.js` — include test that `getTrackPoints` applies `parseFloat` to lat/lng before returning
+- [ ] `__tests__/lib/db/logbook-entries.test.js` — happy path, error path, correct filter
 - [ ] `__tests__/lib/db/trip-notes.test.js` — same pattern
 - [ ] `npm test` passes before committing
-- [ ] Commit: "Add /lib/db/ layer with unit tests"
+- [ ] Commit: "Add lib/db/ supporting entities (track-points, logbook-entries, trip-notes) with unit tests"
 
 ---
 
 ## Phase 3 — Move trip-to-leg grouping server-side
 _Estimated effort: 2–3 hours. Fixes the CLAUDE.md Data Integrity requirement._
 
-Currently `TripsList.js` groups legs under trips in the browser (lines 344–357). This runs after the client fetch and can produce wrong results at date boundaries. It needs to move to a server function so boundary logic is validated once, with access to authoritative data types.
+Currently `TripsList.js` groups legs under trips in the browser (lines 344–357). This runs after the client fetch and can produce wrong results at date boundaries.
 
-- [ ] Add `groupLegsIntoTrips(trips, legs)` as a pure function in `lib/db/legs.js`
-  - Input: array of trip objects, array of leg objects
+`app/trips/page.js` must stay a client component (tab-switch performance — see decisions.md), so calling `groupLegsIntoTrips` there would still run it in the browser. The solution is a **Next.js Route Handler** (`app/api/trips-grouped/route.js`). It runs on the server, fetches both tables, runs the grouping, and returns the result as JSON. `trips/page.js` fetches from this endpoint instead of Supabase directly — it is still a client-initiated fetch, so there is no full page re-render on tab switch and the performance reason is preserved. The one trade-off is an extra network hop (browser → Vercel → Supabase); this is acceptable for a family app with small data volumes.
+
+### `lib/db/legs.js` — add pure grouping function
+
+- [ ] Add `groupLegsIntoTrips(trips, legs)` as a pure (no Supabase) function in `lib/db/legs.js`
+  - Input: array of trip objects, array of leg objects (already filtered, no deleted legs)
   - Output: `{ grouped: [{ trip, legs }], standaloneLegs }` sorted by `trip.start_date` desc
-  - Same logic as current TripsList.js lines 344–357 but isolated, testable, and importable by server components
-- [ ] Write `__tests__/lib/db/legs.test.js` cases for `groupLegsIntoTrips`:
-  - [ ] Leg on exact start_date boundary is included
-  - [ ] Leg on exact end_date boundary is included
+  - Same logic as current TripsList.js lines 344–357 but isolated and testable
+
+### Tests for `groupLegsIntoTrips`
+
+- [ ] Add to `__tests__/lib/db/legs.test.js`:
+  - [ ] Leg on exact `start_date` boundary is included
+  - [ ] Leg on exact `end_date` boundary is included
   - [ ] Leg one day outside range is excluded
-  - [ ] Leg assigned to first matching trip (by created_at) when trips overlap
-  - [ ] Leg with no matching trip appears in standaloneLegs
-  - [ ] Already-deleted legs are not passed in (caller responsibility)
-- [ ] In `app/trips/page.js`: call `groupLegsIntoTrips` after the parallel fetch, pass `{ grouped, standaloneLegs }` as props to `TripsList`
+  - [ ] Leg assigned to first matching trip (by `created_at`) when trips overlap
+  - [ ] Leg with no matching trip appears in `standaloneLegs`
+  - [ ] Empty trips array → all legs are standaloneLegs
+  - [ ] Empty legs array → grouped entries all have empty legs arrays
+
+### Route Handler
+
+- [ ] Create `app/api/trips-grouped/route.js` (server-side Route Handler)
+  - Uses `createClient()` from `lib/supabase-server.js`
+  - Calls `getTrips` and `getLegs` from `lib/db/` in parallel
+  - Calls `groupLegsIntoTrips` on the results
+  - Returns `Response.json({ grouped, standaloneLegs })`
+  - Returns `Response.json({ error: '...' }, { status: 500 })` on failure
+
+### Update `app/trips/page.js`
+
+- [ ] Replace the two direct Supabase calls with a single `fetch('/api/trips-grouped')`
+- [ ] Real-time subscription stays — it calls `fetchAll` which now hits the Route Handler instead of Supabase; behaviour is unchanged
 - [ ] Remove the grouping logic from `TripsList.js` (lines 344–357); receive `grouped` and `standaloneLegs` as props instead
+
+### Verify
+
 - [ ] `npm test` passes
-- [ ] Manually verify All Trips tab still renders correctly
-- [ ] Commit: "Move trip-leg grouping out of TripsList into lib/db"
+- [ ] Manually verify All Trips tab: named trips, standalone legs, and real-time update on new leg all work
+- [ ] Commit: "Move trip-leg grouping to server-side Route Handler"
 
 ---
 
@@ -199,8 +233,9 @@ Audit every write path and confirm it handles errors visibly.
 
 - [ ] Phase 0 complete
 - [ ] Phase 1 complete
-- [ ] Phase 2 complete — `npm test` green
-- [ ] Phase 3 complete — `npm test` green, grouping tests passing
+- [ ] Phase 2a complete — `npm test` green, legs.js + trips.js covered
+- [ ] Phase 2b complete — `npm test` green, all five db files covered
+- [ ] Phase 3 complete — `npm test` green, grouping tests passing, Route Handler in place
 - [ ] Phase 4 complete — no file over 200 lines in app/ or components/
 - [ ] Phase 5 complete — no direct Supabase calls outside lib/db/ (except trips/page.js real-time subscription)
 - [ ] Phase 6 complete — all write paths surface errors
