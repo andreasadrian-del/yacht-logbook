@@ -7,18 +7,16 @@ import WayLogIcon from '@/app/WayLogIcon'
 import TripsList from './TripsList'
 
 export default function TripsPage() {
-  const [trips, setTrips] = useState(null)
-  const [legs, setLegs] = useState(null)
+  const [grouped, setGrouped] = useState(null)
+  const [standaloneLegs, setStandaloneLegs] = useState(null)
   const [error, setError] = useState(false)
 
   const fetchAll = useCallback(async () => {
-    const [tripsRes, legsRes] = await Promise.all([
-      supabase.from('trips').select('*').order('start_date', { ascending: false }),
-      supabase.from('legs').select('id, started_at, ended_at, duration_seconds, distance_nm, last_lat, last_lng').is('deleted_at', null).order('started_at', { ascending: false }),
-    ])
-    if (tripsRes.error || legsRes.error) { setError(true); return }
-    setTrips(tripsRes.data ?? [])
-    setLegs(legsRes.data ?? [])
+    const res = await fetch('/api/trips-grouped')
+    if (!res.ok) { setError(true); return }
+    const { grouped, standaloneLegs } = await res.json()
+    setGrouped(grouped)
+    setStandaloneLegs(standaloneLegs)
   }, [])
 
   useEffect(() => {
@@ -33,7 +31,7 @@ export default function TripsPage() {
     return () => supabase.removeChannel(channel)
   }, [fetchAll])
 
-  const loading = trips === null || legs === null
+  const loading = grouped === null
 
   return (
     <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: '#f8f9fa', fontFamily: '-apple-system, "Segoe UI", Roboto, sans-serif' }}>
@@ -61,7 +59,7 @@ export default function TripsPage() {
           )}
 
           {!error && !loading && (
-            <TripsList trips={trips} legs={legs} onRefresh={fetchAll} />
+            <TripsList grouped={grouped} standaloneLegs={standaloneLegs} onRefresh={fetchAll} />
           )}
 
         </div>

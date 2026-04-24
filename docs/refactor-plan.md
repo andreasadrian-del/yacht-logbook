@@ -117,25 +117,25 @@ Currently `TripsList.js` groups legs under trips in the browser (lines 344–357
 
 ### `lib/db/legs.js` — add pure grouping function
 
-- [ ] Add `groupLegsIntoTrips(trips, legs)` as a pure (no Supabase) function in `lib/db/legs.js`
+- [x] Add `groupLegsIntoTrips(trips, legs)` as a pure (no Supabase) function in `lib/db/legs.js`
   - Input: array of trip objects, array of leg objects (already filtered, no deleted legs)
   - Output: `{ grouped: [{ trip, legs }], standaloneLegs }` sorted by `trip.start_date` desc
   - Same logic as current TripsList.js lines 344–357 but isolated and testable
 
 ### Tests for `groupLegsIntoTrips`
 
-- [ ] Add to `__tests__/lib/db/legs.test.js`:
-  - [ ] Leg on exact `start_date` boundary is included
-  - [ ] Leg on exact `end_date` boundary is included
-  - [ ] Leg one day outside range is excluded
-  - [ ] Leg assigned to first matching trip (by `created_at`) when trips overlap
-  - [ ] Leg with no matching trip appears in `standaloneLegs`
-  - [ ] Empty trips array → all legs are standaloneLegs
-  - [ ] Empty legs array → grouped entries all have empty legs arrays
+- [x] Add to `__tests__/lib/db/legs.test.js`:
+  - [x] Leg on exact `start_date` boundary is included
+  - [x] Leg on exact `end_date` boundary is included
+  - [x] Leg one day outside range is excluded
+  - [x] Leg assigned to first matching trip (by `created_at`) when trips overlap
+  - [x] Leg with no matching trip appears in `standaloneLegs`
+  - [x] Empty trips array → all legs are standaloneLegs
+  - [x] Empty legs array → grouped entries all have empty legs arrays
 
 ### Route Handler
 
-- [ ] Create `app/api/trips-grouped/route.js` (server-side Route Handler)
+- [x] Create `app/api/trips-grouped/route.js` (server-side Route Handler)
   - Uses `createClient()` from `lib/supabase-server.js`
   - Calls `getTrips` and `getLegs` from `lib/db/` in parallel
   - Calls `groupLegsIntoTrips` on the results
@@ -144,15 +144,15 @@ Currently `TripsList.js` groups legs under trips in the browser (lines 344–357
 
 ### Update `app/trips/page.js`
 
-- [ ] Replace the two direct Supabase calls with a single `fetch('/api/trips-grouped')`
-- [ ] Real-time subscription stays — it calls `fetchAll` which now hits the Route Handler instead of Supabase; behaviour is unchanged
-- [ ] Remove the grouping logic from `TripsList.js` (lines 344–357); receive `grouped` and `standaloneLegs` as props instead
+- [x] Replace the two direct Supabase calls with a single `fetch('/api/trips-grouped')`
+- [x] Real-time subscription stays — it calls `fetchAll` which now hits the Route Handler instead of Supabase; behaviour is unchanged
+- [x] Remove the grouping logic from `TripsList.js` (lines 344–357); receive `grouped` and `standaloneLegs` as props instead
 
 ### Verify
 
-- [ ] `npm test` passes
+- [x] `npm test` passes
 - [ ] Manually verify All Trips tab: named trips, standalone legs, and real-time update on new leg all work
-- [ ] Commit: "Move trip-leg grouping to server-side Route Handler"
+- [x] Commit: "Move trip-leg grouping to server-side Route Handler"
 
 ---
 
@@ -235,7 +235,7 @@ Audit every write path and confirm it handles errors visibly.
 - [x] Phase 1 complete
 - [x] Phase 2a complete — `npm test` green, legs.js + trips.js covered
 - [x] Phase 2b complete — `npm test` green, all five db files covered
-- [ ] Phase 3 complete — `npm test` green, grouping tests passing, Route Handler in place
+- [x] Phase 3 complete — `npm test` green, grouping tests passing, Route Handler in place
 - [ ] Phase 4 complete — no file over 200 lines in app/ or components/
 - [ ] Phase 5 complete — no direct Supabase calls outside lib/db/ (except trips/page.js real-time subscription)
 - [ ] Phase 6 complete — all write paths surface errors

@@ -1,6 +1,7 @@
 import {
   getLegs, getLeg, getDeletedLegs, createLeg,
   updateLegPosition, stopLeg, softDeleteLeg, restoreLeg, hardDeleteLeg,
+  groupLegsIntoTrips,
 } from '@/lib/db/legs'
 
 // ── Mock helpers ──────────────────────────────────────────────────────────────
@@ -259,5 +260,83 @@ describe('hardDeleteLeg', () => {
     const { sb } = makeSeqSb([ok, ok, ok, { data: null, error: err }])
     const result = await hardDeleteLeg(sb, 'id1')
     expect(result).toEqual({ error: err })
+  })
+})
+
+// ── groupLegsIntoTrips ────────────────────────────────────────────────────────
+
+function makeTrip(id, startDate, endDate, createdAt = '2025-01-01T00:00:00Z') {
+  return { id, start_date: startDate, end_date: endDate, created_at: createdAt }
+}
+
+function makeLeg(id, startedAt) {
+  return { id, started_at: startedAt }
+}
+
+describe('groupLegsIntoTrips', () => {
+  it('includes a leg on the exact start_date boundary', () => {
+    const trips = [makeTrip('t1', '2025-07-01', '2025-07-14')]
+    const legs = [makeLeg('l1', '2025-07-01T08:00:00Z')]
+    const { grouped } = groupLegsIntoTrips(trips, legs)
+    expect(grouped[0].legs.map(l => l.id)).toContain('l1')
+  })
+
+  it('includes a leg on the exact end_date boundary', () => {
+    const trips = [makeTrip('t1', '2025-07-01', '2025-07-14')]
+    const legs = [makeLeg('l1', '2025-07-14T20:00:00Z')]
+    const { grouped } = groupLegsIntoTrips(trips, legs)
+    expect(grouped[0].legs.map(l => l.id)).toContain('l1')
+  })
+
+  it('excludes a leg one day outside the range', () => {
+    const trips = [makeTrip('t1', '2025-07-01', '2025-07-14')]
+    const legs = [makeLeg('l1', '2025-07-15T08:00:00Z')]
+    const { grouped, standaloneLegs } = groupLegsIntoTrips(trips, legs)
+    expect(grouped[0].legs).toHaveLength(0)
+    expect(standaloneLegs.map(l => l.id)).toContain('l1')
+  })
+
+  it('assigns a leg to the first-created trip when ranges overlap', () => {
+    const trips = [
+      makeTrip('t1', '2025-07-01', '2025-07-14', '2025-01-01T00:00:00Z'),
+      makeTrip('t2', '2025-07-01', '2025-07-14', '2025-01-02T00:00:00Z'),
+    ]
+    const legs = [makeLeg('l1', '2025-07-05T10:00:00Z')]
+    const { grouped } = groupLegsIntoTrips(trips, legs)
+    const t1 = grouped.find(g => g.trip.id === 't1')
+    const t2 = grouped.find(g => g.trip.id === 't2')
+    expect(t1.legs.map(l => l.id)).toContain('l1')
+    expect(t2.legs).toHaveLength(0)
+  })
+
+  it('puts an unmatched leg in standaloneLegs', () => {
+    const trips = [makeTrip('t1', '2025-07-01', '2025-07-14')]
+    const legs = [makeLeg('l1', '2025-08-01T10:00:00Z')]
+    const { standaloneLegs } = groupLegsIntoTrips(trips, legs)
+    expect(standaloneLegs.map(l => l.id)).toContain('l1')
+  })
+
+  it('returns all legs as standaloneLegs when trips array is empty', () => {
+    const legs = [makeLeg('l1', '2025-07-05T10:00:00Z'), makeLeg('l2', '2025-08-01T10:00:00Z')]
+    const { grouped, standaloneLegs } = groupLegsIntoTrips([], legs)
+    expect(grouped).toHaveLength(0)
+    expect(standaloneLegs.map(l => l.id)).toEqual(['l1', 'l2'])
+  })
+
+  it('returns empty legs arrays when legs array is empty', () => {
+    const trips = [makeTrip('t1', '2025-07-01', '2025-07-14')]
+    const { grouped, standaloneLegs } = groupLegsIntoTrips(trips, [])
+    expect(grouped[0].legs).toHaveLength(0)
+    expect(standaloneLegs).toHaveLength(0)
+  })
+
+  it('sorts grouped results by start_date descending', () => {
+    const trips = [
+      makeTrip('t1', '2025-06-01', '2025-06-30', '2025-01-01T00:00:00Z'),
+      makeTrip('t2', '2025-07-01', '2025-07-31', '2025-01-02T00:00:00Z'),
+    ]
+    const { grouped } = groupLegsIntoTrips(trips, [])
+    expect(grouped[0].trip.id).toBe('t2')
+    expect(grouped[1].trip.id).toBe('t1')
   })
 })

@@ -333,28 +333,12 @@ function CreateTripModal({ onClose, onCreated }) {
 }
 
 // ── Main list ─────────────────────────────────────────────────────
-export default function TripsList({ trips, legs, onRefresh }) {
+export default function TripsList({ grouped, standaloneLegs, onRefresh }) {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editTrip, setEditTrip] = useState(null)
   const [confirmLeg, setConfirmLeg] = useState(null)
   const [warnLeg, setWarnLeg] = useState(null)
   const [deleting, setDeleting] = useState(false)
-
-  // Group legs under trips (first matching trip by created_at wins)
-  const sortedTrips = [...trips].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-  const assignedLegIds = new Set()
-
-  const grouped = sortedTrips.map(trip => {
-    const tripLegs = legs.filter(leg => {
-      if (assignedLegIds.has(leg.id)) return false
-      const d = leg.started_at.slice(0, 10)
-      return d >= trip.start_date && d <= trip.end_date
-    })
-    tripLegs.forEach(l => assignedLegIds.add(l.id))
-    return { trip, legs: tripLegs }
-  }).sort((a, b) => new Date(b.trip.start_date) - new Date(a.trip.start_date))
-
-  const standAloneLegs = legs.filter(l => !assignedLegIds.has(l.id))
 
   function handleDeleteLegRequest(leg, parentTripId = null) {
     if (!leg.ended_at) { setWarnLeg(leg); return }
@@ -371,7 +355,7 @@ export default function TripsList({ trips, legs, onRefresh }) {
     onRefresh()
   }
 
-  const totalLegs = legs.length
+  const totalLegs = grouped.reduce((sum, { legs }) => sum + legs.length, 0) + standaloneLegs.length
 
   return (
     <>
@@ -394,7 +378,7 @@ export default function TripsList({ trips, legs, onRefresh }) {
       ))}
 
       {/* Standalone legs */}
-      {standAloneLegs.length > 0 && (
+      {standaloneLegs.length > 0 && (
         <>
           {grouped.length > 0 && (
             <p style={{ fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '4px 0 10px' }}>
@@ -402,7 +386,7 @@ export default function TripsList({ trips, legs, onRefresh }) {
             </p>
           )}
           <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-            {standAloneLegs.map((leg, i) => (
+            {standaloneLegs.map((leg, i) => (
               <LegRow key={leg.id} leg={leg} tripId={null} isFirst={i === 0} onDelete={handleDeleteLegRequest} />
             ))}
           </div>
