@@ -21,7 +21,7 @@ yacht-logbook/
 │   │
 │   ├── trips/
 │   │   ├── page.js             # /trips — All Trips tab (client component; intentional)
-│   │   ├── TripsList.js        # Trip cards, leg rows, modals (client component — 472 lines, refactor target)
+│   │   ├── TripsList.js        # Trip list orchestration — imports LegRow, TripCard, modals (client component — 106 lines)
 │   │   └── [id]/
 │   │       ├── page.js         # /trips/:id — Trip detail (server component)
 │   │       ├── TripDetailView.js  # Summary + leg list UI (client component)
@@ -40,12 +40,27 @@ yacht-logbook/
 │   ├── login/
 │   │   └── page.js             # /login — Email/password login form
 │   │
-│   └── log/
-│       └── page.js             # DEAD FILE — Log Entry tab was removed. Delete before working nearby.
+│   └── api/
+│       └── trips-grouped/
+│           └── route.js        # GET /api/trips-grouped — server-side grouping Route Handler
+│
+├── components/                 # Reusable UI components (extracted from TripsList)
+│   ├── LegRow.js               # Swipeable leg row with delete gesture
+│   ├── TripCard.js             # Trip header card with expand/collapse
+│   ├── EditTripModal.js        # Edit trip name and dates
+│   ├── CreateTripModal.js      # Two-step create trip flow
+│   └── ConfirmModal.js         # Shared confirm/warn dialog
 │
 ├── lib/
-│   ├── supabase.js             # Browser Supabase client (singleton, used in client components)
-│   └── supabase-server.js      # Server Supabase client factory (used in server components + middleware)
+│   ├── supabase.js             # Browser Supabase client (singleton)
+│   ├── supabase-server.js      # Server Supabase client factory
+│   ├── format.js               # Shared formatDate / formatDuration helpers
+│   └── db/                     # Supabase access layer — one file per entity
+│       ├── legs.js             # getLegs, createLeg, stopLeg, softDeleteLeg, groupLegsIntoTrips …
+│       ├── trips.js            # getTrips, createTrip, updateTrip, deleteTrip …
+│       ├── track-points.js     # insertTrackPoints, getTrackPoints …
+│       ├── logbook-entries.js  # insertLogbookEntry, getLogbookEntries …
+│       └── trip-notes.js       # insertNote, getNotes …
 │
 ├── middleware.js               # Auth guard — redirects to /login if no session
 │
@@ -53,6 +68,9 @@ yacht-logbook/
 │   ├── manifest.json           # PWA manifest
 │   ├── sw.js                   # Service worker
 │   └── icons/                  # PWA icons (192, 512, apple-touch)
+│
+├── __tests__/                  # Unit tests mirroring source paths
+│   └── lib/db/                 # legs.test.js, trips.test.js, track-points.test.js …
 │
 └── docs/                       # Architecture, schema, and decision docs
 ```
@@ -114,15 +132,20 @@ app/page.js (client)
 
 ```
 app/trips/page.js (client component — fetch on mount)
-    │ supabase.from('trips') + supabase.from('legs') — parallel fetch
-    │ + Supabase real-time subscription on both tables
+    │ fetch('/api/trips-grouped')  ← Route Handler runs server-side
+    │ + Supabase real-time subscription (legs + trips tables)
+    │   → re-runs fetchAll on any change
     ▼
-TripsList.js (client component)
-    ├── groups legs into named trips by date range (client-side — fragile, see CLAUDE.md)
-    ├── renders collapsible TripCard rows
-    ├── pencil → EditTripModal → supabase: trips UPDATE
-    ├── create → CreateTripModal → supabase: trips INSERT
-    └── delete leg → supabase: legs UPDATE (deleted_at) → if last leg, trips DELETE
+app/api/trips-grouped/route.js (server-side Route Handler)
+    │ getTrips(supabase) + getLegs(supabase) — parallel via lib/db/
+    │ groupLegsIntoTrips() — pure function, server-side
+    └── returns { grouped, standaloneLegs } as JSON
+
+TripsList.js (client component — receives grouped + standaloneLegs as props)
+    ├── renders TripCard rows (collapsible, each contains LegRow children)
+    ├── pencil → EditTripModal → updateTrip (lib/db/trips)
+    ├── create → CreateTripModal → createTrip (lib/db/trips)
+    └── swipe delete → ConfirmModal → softDeleteLeg (lib/db/legs)
 ```
 
 ### Trip detail (`/trips/:id`)
@@ -147,7 +170,7 @@ app/legs/[id]/page.js (server component)
     │ generateTimeline(): builds 5-min interval rows with nearest GPS point + events
     ▼
 LegDetailView.js (client component)
-    ├── notes textarea → supabase: trip_notes INSERT (browser client)
+    ├── notes textarea → insertNote (lib/db/trip-notes)
     ├── renders timeline table (ISO timestamps formatted in browser for correct timezone)
     └── passes points → LegMap (Leaflet, dynamic import)
 
@@ -160,14 +183,13 @@ LegLiveUpdater.js (client component, rendered only when leg.ended_at is null)
 
 ```
 app/more/page.js (client component — fetch on mount)
-    │ supabase.from('legs').not('deleted_at', 'is', null)
+    │ getDeletedLegs(supabase)  ← lib/db/legs
+    │ + Supabase real-time subscription (legs table)
     ▼
 DeletedLegRow
-    ├── swipe right → supabase: legs UPDATE (deleted_at = null)  [restore]
-    └── swipe left → confirm modal → supabase: track_points DELETE
-                                              logbook_entries DELETE
-                                              trip_notes DELETE
-                                              legs DELETE         [hard delete]
+    ├── swipe right → ConfirmModal → restoreLeg (lib/db/legs)
+    └── swipe left  → ConfirmModal → hardDeleteLeg (lib/db/legs)
+                        deletes track_points → logbook_entries → trip_notes → legs
 ```
 
 ---
@@ -251,14 +273,11 @@ Cache invalidation:
 
 ---
 
-## Current architectural debt
+## Remaining known items
 
-| Issue | Location | Risk |
+| Item | Location | Notes |
 |---|---|---|
-| Supabase called directly from components and pages | Most files | Hard to test; mixed concerns |
-| Trip-to-leg grouping runs client-side | `TripsList.js` | Wrong results at date boundaries |
-| `TripsList.js` is 472 lines, does fetching + state + rendering | `app/trips/TripsList.js` | Hard to change safely |
-| Dead file | `app/log/page.js` | Confusion; delete before working nearby |
-| No `/lib/db/` abstraction layer | — | All queries are inline; no single place to add error handling or tests |
-
-See `CLAUDE.md` for the agreed direction on resolving each of these.
+| logbook_entries inserts not yet in lib/db/ | `app/page.js` lines 90, 308 | Use `insertLogbookEntry` when next touching this file |
+| GPS writes bypass lib/db/ | `app/useGpsTracking.js` | Intentional — pendingPointsRef atomicity; do not change without a plan |
+| Server component reads bypass lib/db/ | `app/trips/[id]/page.js`, `app/legs/[id]/page.js` | Acceptable for server-side reads; lib/db/ functions are available if needed |
+| No integration tests | — | Unit tests cover all lib/db/ functions (77 passing); write flows not integration-tested |
