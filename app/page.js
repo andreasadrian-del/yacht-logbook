@@ -7,6 +7,7 @@ import WayLogIcon from './WayLogIcon'
 import BottomNav from './BottomNav'
 import { useTripContext } from './TripContext'
 import { useGpsTracking } from './useGpsTracking'
+import TrackSlider from '@/components/TrackSlider'
 
 const EVENTS = ['TACK', 'JIBE', 'REEF', 'UNREEF', 'ENGINE ON', 'ENGINE OFF']
 
@@ -68,7 +69,6 @@ export default function TrackingPage() {
   const [comment, setComment] = useState('')
   const [savingComment, setSavingComment] = useState(false)
   const [commentSaved, setCommentSaved] = useState(false)
-  const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [showCommentModal, setShowCommentModal] = useState(false)
   const [eventError, setEventError] = useState(null)
 
@@ -233,20 +233,12 @@ export default function TrackingPage() {
             </div>
           )}
 
-          <button
-            onClick={tracking ? () => setShowStopConfirm(true) : startTripHandler}
-            disabled={status === 'uploading'}
-            style={{
-              width: '100%', padding: '16px 0', borderRadius: 28, border: 'none',
-              fontSize: 16, fontWeight: 600, cursor: status === 'uploading' ? 'wait' : 'pointer',
-              background: status === 'uploading' ? '#dadce0' : tracking ? '#ea4335' : '#1a73e8',
-              color: status === 'uploading' ? '#9aa0a6' : '#fff',
-              boxShadow: status === 'uploading' ? 'none' : '0 2px 6px rgba(0,0,0,0.2)',
-              transition: 'background 0.2s, box-shadow 0.2s',
-            }}
-          >
-            {status === 'uploading' ? 'Saving…' : tracking ? '■  Stop Leg' : '▶  Start Leg'}
-          </button>
+          <TrackSlider
+            tracking={tracking}
+            status={status}
+            onStart={startTripHandler}
+            onStop={stopTripHandler}
+          />
 
         </div>
       </div>
@@ -333,38 +325,6 @@ export default function TrackingPage() {
                 }}
               >
                 {savingComment ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Stop confirmation modal */}
-      {showStopConfirm && (
-        <div
-          onClick={() => setShowStopConfirm(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{ background: '#fff', borderRadius: 20, padding: '28px 20px', maxWidth: 320, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.18)' }}
-          >
-            <p style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#202124', textAlign: 'center' }}>Stop Leg?</p>
-            <p style={{ margin: '0 0 24px', fontSize: 14, color: '#5f6368', textAlign: 'center', lineHeight: 1.5 }}>
-              This will end the current leg and save all track data.
-            </p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button
-                onClick={() => setShowStopConfirm(false)}
-                style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #e8eaed', background: '#fff', color: '#202124', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => { setShowStopConfirm(false); stopTripHandler() }}
-                style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: 'none', background: '#ea4335', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
-              >
-                Stop Leg
               </button>
             </div>
           </div>

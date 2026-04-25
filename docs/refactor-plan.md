@@ -239,5 +239,5 @@ Audit every write path and confirm it handles errors visibly.
 - [x] Phase 4 complete — no file over 200 lines in app/ or components/
 - [x] Phase 5 complete — no direct Supabase calls outside lib/db/ (except trips/page.js real-time subscription)
 - [x] Phase 6 complete — all write paths surface errors
-- [ ] CLAUDE.md updated to reflect completed state
-- [ ] `v2.0-refactored` git tag created
+- [x] CLAUDE.md updated to reflect completed state
+- [x] `v2.0-refactored` git tag created

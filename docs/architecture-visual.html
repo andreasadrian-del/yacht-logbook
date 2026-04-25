@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>How Logbook Nadira Is Built</title>
+<style>
+:root {
+  --phone-bg: #eff6ff; --phone-border: #93c5fd; --phone-accent: #1d4ed8; --phone-head: #1e3a8a;
+  --server-bg: #ecfdf5; --server-border: #6ee7b7; --server-accent: #059669; --server-head: #064e3b;
+  --db-bg: #f5f3ff; --db-border: #c4b5fd; --db-accent: #7c3aed; --db-head: #4c1d95;
+  --gh-bg: #f8fafc; --gh-border: #cbd5e1; --gh-accent: #475569; --gh-head: #1e293b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f1f5f9; color: #0f172a;
+  padding: 16px 12px 48px; line-height: 1.4;
+}
+
+/* ── Header ── */
+.hdr { text-align: center; padding: 12px 0 24px; }
+.hdr .anchor { font-size: 40px; display: block; margin-bottom: 8px; }
+.hdr h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; }
+.hdr p { font-size: 13px; color: #64748b; margin-top: 6px; max-width: 340px; margin-inline: auto; }
+
+/* ── Diagram wrapper ── */
+.diagram { max-width: 520px; margin: 0 auto; }
+
+/* ── Zone ── */
+.zone {
+  border-radius: 18px; padding: 16px;
+  border: 2px solid transparent;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.zone-phone    { background: var(--phone-bg);  border-color: var(--phone-border);  }
+.zone-server   { background: var(--server-bg); border-color: var(--server-border); }
+.zone-database { background: var(--db-bg);     border-color: var(--db-border);     }
+.zone-github   { background: var(--gh-bg);     border-color: var(--gh-border);     }
+
+/* Zone header */
+.zh { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.zh-badge {
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.zone-phone    .zh-badge { background: var(--phone-accent);  }
+.zone-server   .zh-badge { background: var(--server-accent); }
+.zone-database .zh-badge { background: var(--db-accent);     }
+.zone-github   .zh-badge { background: var(--gh-accent);     }
+.zh-name { font-size: 15px; font-weight: 700; }
+.zone-phone    .zh-name { color: var(--phone-head);  }
+.zone-server   .zh-name { color: var(--server-head); }
+.zone-database .zh-name { color: var(--db-head);     }
+.zone-github   .zh-name { color: var(--gh-head);     }
+.zh-tag { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+/* Section label inside zone */
+.sec { font-size: 10px; font-weight: 700; text-transform: uppercase;
+       letter-spacing: .08em; color: #94a3b8; margin: 14px 0 8px; }
+
+/* ── Cards ── */
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cards.c3 { grid-template-columns: 1fr 1fr 1fr; }
+.card {
+  background: rgba(255,255,255,.82); border-radius: 12px; padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,.6); cursor: pointer;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+  transition: transform .12s, box-shadow .12s;
+}
+.card:active { transform: scale(.97); box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+.card.full { grid-column: 1 / -1; }
+.card em { font-size: 22px; display: block; margin-bottom: 6px; font-style: normal; }
+.card b { font-size: 13px; font-weight: 700; display: block; margin-bottom: 3px; color: #0f172a; }
+.card s { font-size: 11.5px; color: #475569; line-height: 1.4; display: block;
+          text-decoration: none; }
+
+/* ── Connector between zones ── */
+.conn { display: flex; justify-content: center; padding: 5px 0; }
+.conn-pill {
+  background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px;
+  padding: 8px 16px; display: flex; flex-direction: column; gap: 5px;
+}
+.cr { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #475569; }
+.cr-a { font-size: 15px; font-weight: 700; line-height: 1; }
+.cr-a.dn { color: #3b82f6; }
+.cr-a.up { color: #059669; }
+
+/* ── Direct-connections box ── */
+.direct {
+  background: #fff7ed; border: 2px solid #fed7aa;
+  border-radius: 14px; padding: 14px 16px; margin: 10px 0;
+}
+.direct-hd { font-size: 12.5px; font-weight: 700; color: #c2410c; margin-bottom: 10px; }
+.dr { display: flex; gap: 10px; padding: 7px 0; border-top: 1px solid #fde68a; }
+.dr:first-of-type { border-top: none; }
+.dr-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.dr-text { font-size: 12px; color: #9a3412; line-height: 1.55; }
+.dr-text strong { display: block; font-weight: 700; }
+
+/* ── Divider ── */
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 0; color: #94a3b8; font-size: 11px;
+  justify-content: center;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: #e2e8f0;
+}
+
+/* ── Deploy note inside GitHub zone ── */
+.deploy-note {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; color: #64748b;
+  background: #f1f5f9; border: 1px solid #e2e8f0;
+  border-radius: 20px; padding: 4px 12px;
+  margin-bottom: 14px;
+}
+
+/* ── Legend ── */
+.legend {
+  max-width: 520px; margin: 20px auto 0;
+  display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: center;
+}
+.li { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #475569; }
+.ld { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
+.fnote { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 12px; }
+
+/* ── Bottom sheet overlay ── */
+.overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(15,23,42,.55); z-index: 200;
+  align-items: flex-end; justify-content: center;
+  padding: 0 12px 12px;
+}
+.overlay.open { display: flex; }
+.sheet {
+  background: #fff; border-radius: 20px; padding: 22px 20px;
+  width: 100%; max-width: 520px;
+  box-shadow: 0 -4px 32px rgba(0,0,0,.15);
+  animation: up .2s ease;
+}
+@keyframes up { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sh-em { font-size: 34px; display: block; margin-bottom: 10px; }
+.sh-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.sh-body { font-size: 14px; color: #475569; line-height: 1.65; white-space: pre-wrap; }
+.sh-close {
+  display: block; margin-top: 20px; width: 100%; padding: 13px;
+  background: #0f172a; color: #fff; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+@media (max-width: 360px) {
+  .cards.c3 { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <span class="anchor">⚓</span>
+  <h1>Logbook Nadira</h1>
+  <p>How the app is put together — from your phone to the server to the database. Tap any card for more detail.</p>
+</div>
+
+<div class="diagram">
+
+  <!-- ════════════════════════════════════════════ -->
+  <!--  ZONE 1 · YOUR PHONE                        -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="zone zone-phone">
+    <div class="zh">
+      <div class="zh-badge">📱</div>
+      <div>
+        <div class="zh-name">Your Phone — The App</div>
+        <div class="zh-tag">Everything the family sees and touches</div>
+      </div>
+    </div>
+
+    <div class="sec">What you see</div>
+    <div class="cards">
+      <div class="card" onclick="show('tracking')">
+        <em>🧭</em><b>Tracking Screen</b>
+        <s>Live GPS, speed, map and event logging</s>
+      </div>
+      <div class="card" onclick="show('trips')">
+        <em>🗺️</em><b>Trips Screen</b>
+        <s>Browse all named trips and legs</s>
+      </div>
+      <div class="card" onclick="show('legdetail')">
+        <em>📋</em><b>Leg Detail</b>
+        <s>Full track, timeline, notes, map</s>
+      </div>
+      <div class="card" onclick="show('archive')">
+        <em>🗑️</em><b>Archive Screen</b>
+        <s>Restore or permanently delete removed legs</s>
+      </div>
+    </div>
+
+    <div class="sec">Under the hood</div>
+    <div class="cards c3">
+      <div class="card" onclick="show('gps')">
+        <em>📡</em><b>GPS Engine</b>
+        <s>Records position every 30 seconds</s>
+      </div>
+      <div class="card" onclick="show('queue')">
+        <em>💾</em><b>Offline Queue</b>
+        <s>Saves fixes if signal drops</s>
+      </div>
+      <div class="card" onclick="show('cache')">
+        <em>⚡</em><b>App Cache</b>
+        <s>Loads without internet</s>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connector: Phone ↔ Server -->
+  <div class="conn">
+    <div class="conn-pill">
+      <div class="cr"><span class="cr-a dn">↓</span> Load pages &amp; request trip data</div>
+      <div class="cr"><span class="cr-a up">↑</span> Send back pages &amp; grouped trip data</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!--  ZONE 2 · THE SERVER                        -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="zone zone-server">
+    <div class="zh">
+      <div class="zh-badge">🖥️</div>
+      <div>
+        <div class="zh-name">Vercel — The Server</div>
+        <div class="zh-tag">The invisible middleman that processes every request</div>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card" onclick="show('guard')">
+        <em>🔒</em><b>Login Guard</b>
+        <s>Checks you're logged in before showing any page</s>
+      </div>
+      <div class="card" onclick="show('grouping')">
+        <em>📅</em><b>Trip Grouping Engine</b>
+        <s>Matches legs to trips by date — runs server-side for accuracy</s>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connector: Server ↔ Database -->
+  <div class="conn">
+    <div class="conn-pill">
+      <div class="cr"><span class="cr-a dn">↓</span> Fetch trips &amp; legs from database</div>
+      <div class="cr"><span class="cr-a up">↑</span> Database returns the data</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!--  ZONE 3 · THE DATABASE                      -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="zone zone-database">
+    <div class="zh">
+      <div class="zh-badge">🗄️</div>
+      <div>
+        <div class="zh-name">Supabase — The Database</div>
+        <div class="zh-tag">Stores everything, handles login, sends live updates</div>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card" onclick="show('saildata')">
+        <em>⛵</em><b>Your Sailing Data</b>
+        <s>Legs, trips, track points, log entries, notes</s>
+      </div>
+      <div class="card" onclick="show('auth')">
+        <em>👤</em><b>Login Service</b>
+        <s>Secure email/password, data stays private</s>
+      </div>
+      <div class="card full" onclick="show('realtime')">
+        <em>🔔</em><b>Live Updates</b>
+        <s>Notifies the app the instant anything changes — no manual refresh needed</s>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direct connections callout -->
+  <div class="direct">
+    <div class="direct-hd">📡 Your phone also talks directly to the database — bypassing the server for two things:</div>
+    <div class="dr">
+      <span class="dr-icon">→</span>
+      <div class="dr-text">
+        <strong>GPS track points (every 30 seconds while recording)</strong>
+        Points go straight to the database for speed. If you lose signal at sea, they're saved on the phone first and uploaded the moment signal returns — nothing is ever lost.
+      </div>
+    </div>
+    <div class="dr">
+      <span class="dr-icon">←</span>
+      <div class="dr-text">
+        <strong>Live update subscription (always-on connection)</strong>
+        The app keeps a permanent open line to the database. When a leg finishes saving, the Trips screen updates automatically — no need to tap refresh.
+      </div>
+    </div>
+  </div>
+
+  <!-- Divider before GitHub -->
+  <div class="divider">Developer workflow</div>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!--  ZONE 4 · GITHUB                            -->
+  <!-- ════════════════════════════════════════════ -->
+  <div class="zone zone-github">
+    <div class="zh">
+      <div class="zh-badge">🐙</div>
+      <div>
+        <div class="zh-name">GitHub — Code Home</div>
+        <div class="zh-tag">Where the app's source code lives and is versioned</div>
+      </div>
+    </div>
+    <div class="deploy-note">↑ Code push here → Vercel auto-deploys a new version within ~2 minutes</div>
+    <div class="cards">
+      <div class="card" onclick="show('sourcecode')">
+        <em>📦</em><b>Source Code</b>
+        <s>Every file that makes the app work, with full change history</s>
+      </div>
+      <div class="card" onclick="show('autodeploy')">
+        <em>🚀</em><b>Auto-Deploy</b>
+        <s>Push code → Vercel rebuilds → everyone gets the new version</s>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /diagram -->
+
+<div class="legend">
+  <div class="li"><div class="ld" style="background:#3b82f6"></div>Your Phone</div>
+  <div class="li"><div class="ld" style="background:#10b981"></div>Vercel Server</div>
+  <div class="li"><div class="ld" style="background:#8b5cf6"></div>Supabase Database</div>
+  <div class="li"><div class="ld" style="background:#64748b"></div>GitHub Code</div>
+</div>
+<div class="fnote">Tap any card to learn more &nbsp;·&nbsp; Logbook Nadira &nbsp;·&nbsp; 2026</div>
+
+<!-- ── Bottom sheet ── -->
+<div class="overlay" id="ov" onclick="closeOnBg(event)">
+  <div class="sheet">
+    <span class="sh-em" id="s-em"></span>
+    <div class="sh-title" id="s-title"></div>
+    <div class="sh-body" id="s-body"></div>
+    <button class="sh-close" onclick="close()">Close</button>
+  </div>
+</div>
+
+<script>
+const D = {
+  tracking: {
+    e:'🧭', t:'Tracking Screen',
+    b:'The main view while sailing. It shows your live GPS position on a moving map, your current speed (SOG — Speed Over Ground) and direction (COG — Course Over Ground), total distance covered, and elapsed time.\n\nWhile a leg is recording, a row of event buttons appears: tap once to log a tack, jibe, reef, unreef, engine on, or engine off — each is saved with its exact time and GPS position. A chat-bubble button opens a comment box for free text.\n\nPress Start Leg to begin recording and Stop Leg to save everything.'
+  },
+  trips: {
+    e:'🗺️', t:'Trips Screen',
+    b:'Shows all your named trips (like "Croatia 2025") as blue cards, each showing the date range, number of legs, total distance, and total time. Tap the expand arrow to see the individual legs inside. Tap a leg to go to its detail page.\n\nUse the pencil icon on a trip card to edit the name or dates. Use "+ Create Trip" to add a new named trip. Swipe left on a leg row to reveal a Delete button — it moves the leg to the Archive rather than erasing it.'
+  },
+  legdetail: {
+    e:'📋', t:'Leg Detail Page',
+    b:'The full record of one GPS sail. Shows:\n\n• A track map of exactly where you went\n• A timeline table — one row per 5-minute interval, showing speed and direction at each point\n• Every event logged during the leg (tacks, engine starts, comments)\n• Any written notes you added before or after the sail\n\nTimes are shown in your local timezone (the phone\'s clock), not the server\'s UTC time, so they always match what you remember.'
+  },
+  archive: {
+    e:'🗑️', t:'Archive Screen (More tab)',
+    b:'When you delete a leg from the Trips screen, it moves here rather than being erased immediately — a safety net against accidents.\n\nSwipe right on an archived leg to restore it to the Trips screen. Swipe left to permanently delete it, which removes all its track points, log entries, and notes from the database too.\n\nThe permanent delete shows a confirmation message first, so you have to be deliberate about it.'
+  },
+  gps: {
+    e:'📡', t:'GPS Engine',
+    b:'Records your phone\'s GPS position while a leg is active. It captures one fix every 30 seconds — a balance between tracking precision and battery life.\n\nIt uses the Wake Lock API to prevent iOS from suspending the GPS watch when the screen goes off. If you unlock the screen, the app immediately captures a fix without waiting for the next 30-second window.\n\nSpeed and direction are calculated from consecutive GPS positions (geometry) because iOS doesn\'t provide reliable values from the GPS chip directly.'
+  },
+  queue: {
+    e:'💾', t:'Offline Safety Queue',
+    b:'GPS points are collected on the phone first, then uploaded to the database in batches every 30 seconds.\n\nIf you lose mobile signal at sea, points pile up in the queue on the phone. When signal returns, they are automatically uploaded — the database receives them in the correct order with their original timestamps.\n\nThe queue is also saved to the phone\'s local storage. If the app is briefly suspended, the browser crashes, or you navigate to another tab and back, the queue is restored from storage and nothing is lost.'
+  },
+  cache: {
+    e:'⚡', t:'App Cache (Service Worker)',
+    b:'A small background script called a Service Worker caches the app\'s files on your phone the first time you open it. After that:\n\n• The app loads instantly from cache, even with no internet\n• Maps and track data still need a connection to display, but the app shell loads immediately\n\nWhenever a new version is deployed to Vercel, the cache is automatically refreshed on your next visit — you always get the latest version without needing to clear anything manually.'
+  },
+  guard: {
+    e:'🔒', t:'Login Guard',
+    b:'Every single request to the app — every page load, every tab switch — passes through this check before anything is shown.\n\nIt reads your login session from a secure cookie. If the cookie is missing or expired, you are redirected to the login screen. This check runs on the server, not in the browser, so there is no way to skip it by manipulating the app\'s code.\n\nThe family uses a single shared email and password. All data in the database is locked to that account — even if someone knew the database URL, they could not read your sailing data without the login.'
+  },
+  grouping: {
+    e:'📅', t:'Trip Grouping Engine',
+    b:'This takes your list of trips (each with a start and end date) and your list of legs (each recorded on a particular date) and works out which legs belong to which trip.\n\nA leg belongs to a trip if the day it started falls within the trip\'s date range. If two trips overlap, the leg goes to the trip that was created first.\n\nThis runs on the server, not your phone, for an important reason: date boundary calculations depend on timezone. The server always uses the same consistent timezone logic, so you never get a leg incorrectly placed at the end of one trip instead of the start of the next.'
+  },
+  saildata: {
+    e:'⛵', t:'Your Sailing Data',
+    b:'Stored in five database tables:\n\n• Legs — each GPS sail (start time, end time, distance, duration)\n• Trips — named groupings with a date range (Croatia 2025, etc.)\n• Track Points — every GPS fix (latitude, longitude, speed, direction, timestamp)\n• Log Entries — events during a leg: tacks, jibes, reefs, engine on/off, comments — each with a position\n• Notes — free-text notes attached to a leg\n\nDeleting a leg sets a "deleted at" timestamp rather than removing the row — so it can be restored from the Archive. Only a permanent delete removes the data.'
+  },
+  auth: {
+    e:'👤', t:'Login Service',
+    b:'Supabase handles the family\'s email and password securely. Passwords are never stored in plain text.\n\nAll five data tables are protected by Row-Level Security — database rules that mean only the logged-in family account can read or write its own data. This is enforced inside the database itself, not just in the app\'s code. Even if someone knew the database address, they could not access your sailing records without your login.'
+  },
+  realtime: {
+    e:'🔔', t:'Live Updates',
+    b:'The app keeps a permanent open connection (called a subscription) to the database while it\'s on screen.\n\nWhen anything changes in the database — a leg is saved after you press Stop, a leg is soft-deleted, a trip is created or edited — the database sends a notification and the relevant screen updates automatically.\n\nThis is why the Trips screen refreshes the moment you stop a recording on the Tracking tab, without you having to navigate away and back. It\'s also why, if two family members had the app open at the same time, both would see changes immediately.'
+  },
+  sourcecode: {
+    e:'📦', t:'Source Code on GitHub',
+    b:'Every file that makes the app work lives in a GitHub repository. This includes:\n\n• All the React components (the screens)\n• The database access layer (/lib/db/)\n• The Trip Grouping Engine\n• The Service Worker\n• The GPS tracking logic\n• All unit tests (77 tests)\n\nEvery change is saved as a "commit" with a message explaining what changed and why. You can browse the full history, compare any two versions, or roll back to an earlier snapshot.\n\nVersion tags mark important milestones — v1.6-trips-legs-ui, v2.0-refactored, etc.'
+  },
+  autodeploy: {
+    e:'🚀', t:'Auto-Deploy',
+    b:'GitHub and Vercel are connected. When a code change is pushed to GitHub:\n\n1. Vercel detects the change automatically\n2. It runs the build (compiling and optimising all the files)\n3. The new version goes live — usually within 1–2 minutes\n\nThe Service Worker cache on your phone is also updated automatically on the next app open.\n\nYou never need to manually upload files or restart a server. The deploy just happens.'
+  },
+};
+
+function show(k) {
+  const d = D[k]; if (!d) return;
+  document.getElementById('s-em').textContent    = d.e;
+  document.getElementById('s-title').textContent = d.t;
+  document.getElementById('s-body').textContent  = d.b;
+  document.getElementById('ov').classList.add('open');
+}
+function close() { document.getElementById('ov').classList.remove('open'); }
+function closeOnBg(e) { if (e.target.id === 'ov') close(); }
+</script>
+
+</body>
+</html>
