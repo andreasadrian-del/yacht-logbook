@@ -1,29 +1,93 @@
 # docs/decisions.md — Architecture & Technical Decisions
 
-_Last updated: 24 April 2026. If a decision changes, update this file._
+_Last updated: 25 April 2026. If a decision changes, update this file._
 
 ---
 
-## Authentication
+## iOS Architecture Decisions
 
-### Single shared account
-All family members use the same email/password. No per-user features, no magic
-links, no invites. RLS policies use `auth.uid() = user_id` to scope data to
-that one account.
+> These are the active decisions for the current iOS app build.
 
-### Middleware in middleware.js
-Auth protection must live in `middleware.js` at the project root. Any other
-filename is silently ignored by Vercel — the app was fully accessible without
-login until this was fixed.
+### Replacing web app with native iOS app
+The Next.js PWA is retired. The iOS app handles all recording and history
+viewing. A read-only website may be built in future that reads from the
+same Supabase tables.
 
-### getSession() in middleware, not getUser()
-`getSession()` reads the auth cookie synchronously. `getUser()` makes a network
-call to Supabase that can time out, causing middleware to pass unauthenticated
-requests through.
+### TestFlight distribution
+App distributed via TestFlight internal testing — not the public App Store.
+Requires Apple Developer Program membership.
+
+### Background mode: Location Updates, not VoIP
+`Location Updates` background entitlement keeps NWConnection alive when the
+screen is locked. VoIP would also work technically but Apple flags it for
+non-VoIP apps even on TestFlight internal builds.
+
+### SwiftData over CoreData
+iOS 17+ minimum target allows SwiftData. Automatic lightweight migrations
+align with the extensible NMEA architecture — adding a new field requires
+only a new property, no migration file.
+
+### Dual network routing: Zeus3 WiFi + LTE simultaneously
+iOS 13+ automatically routes local traffic (192.168.1.1) over WiFi and
+internet traffic (Supabase) over Cellular when the WiFi network has no
+internet. No special socket binding required. Verify NWPathMonitor behaviour
+on first on-boat test.
+
+### Zeus3 as NMEA source, no additional hardware required
+The B&G Zeus3 has built-in WiFi and streams all N2K bus data as NMEA 0183
+sentences over TCP on port 10110. No YDWG-02 gateway needed unless the
+Zeus3 WiFi proves unreliable in practice.
+
+### Offline buffering strategy
+When LTE is unavailable (offshore), NMEA data is buffered locally in
+SwiftData. Upload to Supabase resumes automatically when NWPathMonitor
+detects cellular connectivity restored.
+
+### $IIXDR heel angle field layout unverified
+B&G typically outputs `$IIXDR,A,<value>,D,HEEL` but this must be verified
+against actual Zeus3 output on first on-boat test. Developer/Test Mode shows
+all raw `$IIXDR` sentences live so the actual field layout can be confirmed.
+
+### Full feature set in v1.0 — no phasing
+The iOS app builds everything in one go: Trips, Legs, History, Notes, Event
+logging, NMEA recording and live display. No deferred phases. The web app is
+fully retired on v1.0 release.
+
+### Developer/Test Mode
+Accessible only when a `DEBUG_MODE` flag is set in app settings. Contains:
+- Raw NMEA sentence log (scrolling, filterable by sentence type)
+- All raw `$IIXDR` sentences displayed as they arrive
+- First On-Boat Checklist — pass/fail toggles and notes fields for each item:
+  1. Zeus3 TCP connection establishes successfully on 192.168.1.1:10110
+  2. Raw NMEA sentences appear in the debug log
+  3. All expected sentence types received ($GPRMC, $IIMWV, $IIDBT, $IIVHW, $IIMTW, $IIHDG, $IIXDR etc.)
+  4. $IIXDR heel angle parses correctly — verify field layout matches $IIXDR,A,<value>,D,HEEL
+  5. Position, SOG and COG display correctly and match the Zeus3 screen
+  6. Fallback to iPhone GPS triggers correctly when TCP connection is dropped
+  7. Automatic reconnection works when TCP connection is restored
+  8. Screen locks — TCP connection stays alive and data keeps flowing
+  9. NWPathMonitor correctly detects cellular internet while on Zeus3 WiFi
+  10. Supabase upload works in real time over cellular while connected to Zeus3 WiFi
+  11. Offline buffering activates correctly when cellular is disabled
+  12. Buffered data syncs to Supabase when cellular is restored
+  13. Data source metadata field correctly records Zeus3 vs Phone GPS in Supabase
+
+### Data source priority: Zeus3 over iPhone GPS
+Zeus3 TCP is always preferred for position, SOG and COG. iPhone GPS
+(CoreLocation) is used as automatic silent fallback if no valid NMEA
+position sentence has been received for more than 5 seconds. Every Supabase
+record includes a `data_source` field (`zeus3` or `phone_gps`).
+
+### Wind data: four distinct fields
+Apparent wind angle and true wind angle from `$IIMWV` are bow-relative.
+True wind direction from `$IIMWD` is an absolute compass bearing. These
+are fundamentally different values — always store them in separate fields,
+never conflate them.
 
 ---
 
-## Data Model
+## Data Model Decisions
+_(Active — applies to both web app history and iOS app)_
 
 ### Trips vs Legs
 A **leg** is one continuous GPS-tracked sail (start → stop). A **trip** is a
@@ -45,127 +109,63 @@ the trip record is also deleted.
 
 ---
 
-## Frontend Architecture
+## Authentication Decisions
+_(Active — Supabase auth model unchanged in iOS app)_
 
-### All Trips page is a client component
-`app/trips/page.js` uses `'use client'` and fetches via the browser Supabase
-client. A server component caused a full network round-trip on every tab switch,
-making navigation feel slow. Do not convert this to a server component.
+### Single shared account
+All family members use the same email/password. No per-user features, no magic
+links, no invites. RLS policies use `auth.uid() = user_id` to scope data to
+that one account.
 
-### Timestamps formatted client-side only
-Raw ISO strings are passed from server to client; formatting happens in the
-browser via `toLocaleTimeString()` / `toLocaleDateString()`. Vercel functions
-run in UTC; the boat is in CEST (UTC+2). Server-side formatting caused times
-to appear 2 hours behind.
-
-### No explicit `<head>` tag in layout.js
-Use Next.js `metadata` export for all head content. A manual `<head>` tag caused
-a hydration mismatch that broke client components including all Leaflet maps.
+### getSession() not getUser()
+`getSession()` reads the auth cookie synchronously. `getUser()` makes a network
+call to Supabase that can time out. This applied to the web app middleware and
+should be kept in mind for any server-side auth calls.
 
 ---
 
-## GPS Tracking
+## Retired Web App Decisions
+_(Historical record only — Next.js PWA retired. Do not apply these to the iOS app.)_
 
-### COG/SOG calculated from geometry, not GPS fields
-`enrichPoints()` derives course (bearing) and speed (haversine distance ÷ time)
-from consecutive track point positions. iOS Safari returns `null` for
-`coords.speed` and `coords.heading` — GPS-provided values cannot be relied on.
+### Frontend Architecture
+- All Trips page was a client component for tab-switch performance
+- Timestamps formatted client-side only due to Vercel running in UTC vs CEST
+- No explicit `<head>` tag in layout.js — caused hydration mismatches
 
-### 30-second throttle on track points
-One GPS point per 30 seconds maximum. Balances data resolution against Supabase
-insert volume and battery drain. Points are batched and uploaded every 30 seconds.
+### GPS Tracking (web)
+- COG/SOG derived from geometry via `enrichPoints()` — iOS Safari returned
+  null for `coords.speed` and `coords.heading`
+- 30-second throttle on track points
+- Wake Lock API (`navigator.wakeLock`) to keep GPS running
+- Pending GPS points persisted to `localStorage` keyed by leg ID
+- TripContext + localStorage for cross-tab state
 
-### Wake Lock API
-`navigator.wakeLock.request('screen')` prevents iOS from suspending the GPS
-watch. Re-acquired on `visibilitychange` when the screen is unlocked.
+### Maps (web)
+- OpenStreetMap + OpenSeaMap tile layers (no API keys required)
+- Leaflet imported sequentially, not with Promise.all — plugin race condition
+- Two-finger pan via leaflet-gesture-handling
 
-### On screen unlock: reset throttle immediately
-When `visibilitychange` fires, `lastRecordedRef` is set to 0 so the next GPS
-fix is recorded immediately rather than waiting up to 30 seconds. Elapsed time
-is corrected from `startTimeRef`.
+### PWA
+- Service worker cache version auto-bumped on build via prebuild script
+- Cache-first for static assets, network-first for navigation requests
 
-### Pending GPS points persisted to localStorage
-`pendingPointsRef` is mirrored to `localStorage` keyed by leg ID. On tab return
-or app restore, pending points are reloaded so no fixes are lost if the app is
-briefly suspended.
-
-### TripContext + localStorage for cross-tab state
-Active `legId` and `tripStartTime` are stored in `localStorage` via
-`TripContext.js`. Ensures GPS timer and track line survive navigation between
-tabs that unmount and remount the tracking page.
-
----
-
-## Maps
-
-### OpenStreetMap + OpenSeaMap tile layers
-OSM provides the base map; OpenSeaMap adds nautical marks, buoys, and depth
-contours. Both are free and require no API keys.
-
-### Leaflet imported sequentially, not with Promise.all
-```js
-import('leaflet').then(async ({ default: L }) => {
-  await import('leaflet-gesture-handling')
-})
-```
-The gesture-handling plugin patches Leaflet's prototype and must run after
-Leaflet loads. `Promise.all` imports caused a race condition that broke maps
-after PWA caching was introduced.
-
-### Two-finger pan via leaflet-gesture-handling
-Without this, a single finger simultaneously scrolled the page and panned the
-map — unusable on mobile.
-
-### initialCenter from localStorage on Tracking tab
-Last known position is read from `localStorage` to zoom the map immediately
-before a GPS fix arrives. Without this, the map starts at world view and jumps
-after 5–10 seconds.
-
----
-
-## PWA
-
-### Service worker cache version auto-bumped on build
-`package.json` has a `prebuild` script that replaces the cache name in
-`public/sw.js` with a timestamp before every `next build`.
-
-### Cache strategy
-`/_next/static/` served cache-first (immutable hashed filenames).
-Page navigations use network-first so users always get the latest content
-when online.
-
----
-
-## UI Details
-
-### Log Entry tab removed
-Event buttons moved to the Tracking tab. They appear below stat cards only
-while a leg is recording. `app/log/page.js` is a dead file — delete it.
-
-### Event button layout and colours
-Grid is column-first: 3 columns × 2 rows, array order
-`[TACK, JIBE, REEF, UNREEF, ENGINE ON, ENGINE OFF]`.
-Tack/Jibe: blue (`#1a73e8`). Reef/Unreef: orange (`#f29900`).
-Engine On/Off: green (`#34a853`).
-
-### Stop button uses ■ not ⏹
-`⏹` (U+23F9) renders with a grey emoji container on iOS. `■` renders cleanly.
-
-### Pencil icon outside the Link on trip cards
-Avoids nesting a button inside an anchor (invalid HTML). Opens EditTripModal.
-
-### Back button on leg detail respects origin
-`/legs/[id]` accepts `?from=tripId`. If present, back → `/trips/<tripId>`;
-otherwise → `/trips`.
-
-### LEG_COLORS exported and reused
-Defined in `TripOverviewMap.js`, imported in `TripDetailView.js` so leg badge
-colours match map polyline colours.
+### UI Details (web)
+- Event button grid: 3 columns × 2 rows, column-first order
+- Stop button uses `■` not `⏹` (emoji rendering issue on iOS)
+- Pencil icon outside Link on trip cards (no button inside anchor)
+- Back button on leg detail respects `?from=tripId` query param
+- LEG_COLORS exported from TripOverviewMap.js and imported in TripDetailView.js
 
 ---
 
 ## Version Tags
 
+### iOS App
+| Tag | Contents |
+|-----|----------|
+| `v1.0-ios-foundation` | Initial iOS app — NMEA recording, live display, Supabase logging |
+
+### Web App (retired)
 | Tag | Contents |
 |-----|----------|
 | `v1.0-secure` | RLS + middleware auth hardening |
