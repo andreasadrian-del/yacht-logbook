@@ -109,6 +109,7 @@ export default function MorePage() {
   const [deletedLegs, setDeletedLegs] = useState(null)
   const [confirmLeg, setConfirmLeg] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [actionError, setActionError] = useState(null)
 
   const fetchDeleted = useCallback(async () => {
     const { data } = await getDeletedLegs(supabase)
@@ -125,7 +126,12 @@ export default function MorePage() {
   }, [fetchDeleted])
 
   async function handleRestore(leg) {
-    await restoreLeg(supabase, leg.id)
+    const { error } = await restoreLeg(supabase, leg.id)
+    if (error) {
+      console.error('Restore error:', error.message)
+      setActionError('Could not restore leg.')
+      return
+    }
     fetchDeleted()
   }
 
@@ -136,7 +142,14 @@ export default function MorePage() {
   async function confirmHardDelete() {
     if (!confirmLeg) return
     setDeleting(true)
-    await hardDeleteLeg(supabase, confirmLeg.id)
+    const { error } = await hardDeleteLeg(supabase, confirmLeg.id)
+    if (error) {
+      console.error('Hard delete error:', error.message)
+      setDeleting(false)
+      setConfirmLeg(null)
+      setActionError('Could not permanently delete leg.')
+      return
+    }
     setConfirmLeg(null)
     setDeleting(false)
     fetchDeleted()
@@ -158,6 +171,12 @@ export default function MorePage() {
           <p style={{ fontSize: 12, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
             Deleted Legs &amp; Trips
           </p>
+
+          {actionError && (
+            <div style={{ background: '#fce8e6', borderRadius: 10, padding: '10px 16px', color: '#ea4335', fontSize: 14, marginBottom: 12 }}>
+              {actionError}
+            </div>
+          )}
 
           {deletedLegs === null && (
             <div style={{ textAlign: 'center', padding: '40px 0', color: '#9aa0a6', fontSize: 14 }}>Loading…</div>

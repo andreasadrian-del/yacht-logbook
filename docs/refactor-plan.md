@@ -210,13 +210,13 @@ _Estimated effort: 1–2 hours. Data Integrity rule: all writes must surface err
 
 Audit every write path and confirm it handles errors visibly.
 
-- [ ] `useGpsTracking.js` — `createLeg` failure: show error status instead of silently failing; `stopLeg` failure: show error, do not clear tracking state
-- [ ] `components/CreateTripModal.js` — already has error display; confirm it uses `/lib/db/` error return
-- [ ] `components/EditTripModal.js` — same
-- [ ] `app/more/page.js` — restore and hard delete: show inline error if they fail
-- [ ] `app/legs/[id]/LegDetailView.js` — note save failure: show inline error
-- [ ] `app/page.js` — event log insert: show transient error toast if it fails (currently silently ignored)
-- [ ] Commit: "Explicit error handling on all write paths"
+- [x] `useGpsTracking.js` — `createLeg` failure: show error status instead of silently failing; `stopLeg` failure: show error, do not clear tracking state
+- [x] `components/CreateTripModal.js` — already has error display; confirm it uses `/lib/db/` error return
+- [x] `components/EditTripModal.js` — same
+- [x] `app/more/page.js` — restore and hard delete: show inline error if they fail
+- [x] `app/legs/[id]/LegDetailView.js` — note save failure: show inline error
+- [x] `app/page.js` — event log insert: show transient error toast if it fails (currently silently ignored)
+- [x] Commit: "Explicit error handling on all write paths"
 
 ---
 
@@ -238,6 +238,6 @@ Audit every write path and confirm it handles errors visibly.
 - [x] Phase 3 complete — `npm test` green, grouping tests passing, Route Handler in place
 - [x] Phase 4 complete — no file over 200 lines in app/ or components/
 - [x] Phase 5 complete — no direct Supabase calls outside lib/db/ (except trips/page.js real-time subscription)
-- [ ] Phase 6 complete — all write paths surface errors
+- [x] Phase 6 complete — all write paths surface errors
 - [ ] CLAUDE.md updated to reflect completed state
 - [ ] `v2.0-refactored` git tag created

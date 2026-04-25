@@ -38,6 +38,7 @@ export default function LegDetailView({ leg, intervals, points, entries, initial
   const [notes, setNotes] = useState(initialNotes ?? [])
   const [newNote, setNewNote] = useState('')
   const [savingNote, setSavingNote] = useState(false)
+  const [noteError, setNoteError] = useState('')
 
   const hasPoints = points && points.length > 0
 
@@ -45,8 +46,15 @@ export default function LegDetailView({ leg, intervals, points, entries, initial
     const content = newNote.trim()
     if (!content) return
     setSavingNote(true)
+    setNoteError('')
     const { data, error } = await insertNote(supabase, leg.id, content)
-    if (!error && data) {
+    if (error) {
+      console.error('Note save error:', error.message)
+      setNoteError('Could not save note.')
+      setSavingNote(false)
+      return
+    }
+    if (data) {
       setNotes(prev => [...prev, data])
       setNewNote('')
     }
@@ -82,6 +90,9 @@ export default function LegDetailView({ leg, intervals, points, entries, initial
             <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 600, color: '#5f6368', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Notes
             </p>
+            {noteError && (
+              <p style={{ margin: '0 0 8px', fontSize: 13, color: '#ea4335' }}>{noteError}</p>
+            )}
             <div style={{ display: 'flex', gap: 8, marginBottom: notes.length > 0 ? 10 : 14 }}>
               <textarea
                 value={newNote}

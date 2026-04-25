@@ -197,7 +197,7 @@ export function useGpsTracking({ isTracking, tripId, tripStartTime, startTrip, e
     wakeLockRef.current?.release(); wakeLockRef.current = null
     setStatus('uploading'); setStatusMsg('Saving leg…')
     await uploadPending()
-    await supabase.from('legs').update({
+    const { error } = await supabase.from('legs').update({
       ended_at: new Date().toISOString(),
       duration_seconds: Math.floor((Date.now() - startTimeRef.current) / 1000),
       distance_nm: Math.round(distanceRef.current * 100) / 100,
@@ -206,6 +206,12 @@ export function useGpsTracking({ isTracking, tripId, tripStartTime, startTrip, e
         last_lng: lastPositionRef.current.lng,
       }),
     }).eq('id', tripIdRef.current)
+    if (error) {
+      console.error('Stop leg error:', error.message)
+      setStatus('error')
+      setStatusMsg('Could not save leg. Tap Stop to retry.')
+      return
+    }
     endTrip()
     tripIdRef.current = null
     setStatus('idle'); setStatusMsg('')

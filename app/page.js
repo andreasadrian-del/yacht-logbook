@@ -70,6 +70,7 @@ export default function TrackingPage() {
   const [commentSaved, setCommentSaved] = useState(false)
   const [showStopConfirm, setShowStopConfirm] = useState(false)
   const [showCommentModal, setShowCommentModal] = useState(false)
+  const [eventError, setEventError] = useState(null)
 
   useEffect(() => {
     if (!splash) return
@@ -86,32 +87,21 @@ export default function TrackingPage() {
 
   async function logEvent(type) {
     if (!tracking) return
-    await supabase.from('logbook_entries').insert({
+    const { error } = await supabase.from('logbook_entries').insert({
       trip_id: tripId,
       event_type: type.toLowerCase(),
       recorded_at: new Date().toISOString(),
       lat: currentPosition?.lat ?? null,
       lng: currentPosition?.lng ?? null,
     })
+    if (error) {
+      console.error('Event log error:', error.message)
+      setEventError('Could not save event.')
+      setTimeout(() => setEventError(null), 3000)
+      return
+    }
     setConfirmed(type)
     setTimeout(() => setConfirmed(null), 1500)
-  }
-
-  async function saveComment() {
-    if (!comment.trim() || !tracking) return
-    setSavingComment(true)
-    await supabase.from('logbook_entries').insert({
-      trip_id: tripId,
-      event_type: 'comment',
-      comment: comment.trim(),
-      recorded_at: new Date().toISOString(),
-      lat: currentPosition?.lat ?? null,
-      lng: currentPosition?.lng ?? null,
-    })
-    setSavingComment(false)
-    setComment('')
-    setCommentSaved(true)
-    setTimeout(() => setCommentSaved(false), 1500)
   }
 
   return (
@@ -237,6 +227,9 @@ export default function TrackingPage() {
                   )
                 })}
               </div>
+              {eventError && (
+                <p style={{ margin: '4px 0 0', fontSize: 13, color: '#ea4335', textAlign: 'center' }}>{eventError}</p>
+              )}
             </div>
           )}
 
@@ -312,7 +305,7 @@ export default function TrackingPage() {
                 onClick={async () => {
                   if (!comment.trim()) return
                   setSavingComment(true)
-                  await supabase.from('logbook_entries').insert({
+                  const { error } = await supabase.from('logbook_entries').insert({
                     trip_id: tripId,
                     event_type: 'comment',
                     comment: comment.trim(),
@@ -321,6 +314,13 @@ export default function TrackingPage() {
                     lng: currentPosition?.lng ?? null,
                   })
                   setSavingComment(false)
+                  if (error) {
+                    console.error('Comment save error:', error.message)
+                    setEventError('Could not save comment.')
+                    setShowCommentModal(false)
+                    setTimeout(() => setEventError(null), 3000)
+                    return
+                  }
                   setComment('')
                   setShowCommentModal(false)
                 }}
