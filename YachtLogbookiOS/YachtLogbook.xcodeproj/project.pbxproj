@@ -1,0 +1,651 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA003000000000000000000001 /* YachtLogbookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000001; };
+		AA003000000000000000000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000002; };
+		AA003000000000000000000003 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000003; };
+		AA003000000000000000000004 /* NMEASentenceParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000004; };
+		AA003000000000000000000005 /* NMEAParserRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000005; };
+		AA003000000000000000000006 /* VesselState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000006; };
+		AA003000000000000000000007 /* GPRMCParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000007; };
+		AA003000000000000000000008 /* GPGGAParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000008; };
+		AA003000000000000000000009 /* IIMWVParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000009; };
+		AA003000000000000000000010 /* IIMWDParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000010; };
+		AA003000000000000000000011 /* IIDBTParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000011; };
+		AA003000000000000000000012 /* IIDPTParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000012; };
+		AA003000000000000000000013 /* IIVHWParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000013; };
+		AA003000000000000000000014 /* IIMTWParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000014; };
+		AA003000000000000000000015 /* IIHDGParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000015; };
+		AA003000000000000000000016 /* IIHDTParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000016; };
+		AA003000000000000000000017 /* IIXDRParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000017; };
+		AA003000000000000000000018 /* NMEATCPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000018; };
+		AA003000000000000000000019 /* ConnectivityMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000019; };
+		AA003000000000000000000020 /* NMEASimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000020; };
+		AA003000000000000000000021 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000021; };
+		AA003000000000000000000022 /* LegModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000022; };
+		AA003000000000000000000023 /* TripModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000023; };
+		AA003000000000000000000024 /* TrackPointModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000024; };
+		AA003000000000000000000025 /* LogbookEntryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000025; };
+		AA003000000000000000000026 /* TripNoteModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000026; };
+		AA003000000000000000000027 /* BufferedUploadModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000027; };
+		AA003000000000000000000028 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000028; };
+		AA003000000000000000000029 /* TrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000029; };
+		AA003000000000000000000030 /* InstrumentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000030; };
+		AA003000000000000000000031 /* TripsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000031; };
+		AA003000000000000000000032 /* TripCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000032; };
+		AA003000000000000000000033 /* LegRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000033; };
+		AA003000000000000000000034 /* LegDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000034; };
+		AA003000000000000000000035 /* LegMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000035; };
+		AA003000000000000000000036 /* ArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000036; };
+		AA003000000000000000000037 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000037; };
+		AA003000000000000000000038 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000038; };
+		AA003000000000000000000039 /* DeveloperModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000039; };
+		AA003000000000000000000040 /* NMEALogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000040; };
+		AA003000000000000000000041 /* OnBoatChecklistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000041; };
+		AA003000000000000000000042 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA002000000000000000000043; };
+		AA003000000000000000000043 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = AA000000000000000000000016; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA000000000000000000000005 /* YachtLogbook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YachtLogbook.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA002000000000000000000001 /* YachtLogbookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YachtLogbookApp.swift; sourceTree = "<group>"; };
+		AA002000000000000000000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		AA002000000000000000000003 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		AA002000000000000000000004 /* NMEASentenceParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NMEASentenceParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000005 /* NMEAParserRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NMEAParserRegistry.swift; sourceTree = "<group>"; };
+		AA002000000000000000000006 /* VesselState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VesselState.swift; sourceTree = "<group>"; };
+		AA002000000000000000000007 /* GPRMCParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPRMCParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000008 /* GPGGAParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GPGGAParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000009 /* IIMWVParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IIMWVParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000010 /* IIMWDParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IIMWDParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000011 /* IIDBTParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IIDBTParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000012 /* IIDPTParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IIDPTParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000013 /* IIVHWParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IIVHWParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000014 /* IIMTWParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IIMTWParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000015 /* IIHDGParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IIHDGParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000016 /* IIHDTParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IIHDTParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000017 /* IIXDRParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IIXDRParser.swift; sourceTree = "<group>"; };
+		AA002000000000000000000018 /* NMEATCPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NMEATCPClient.swift; sourceTree = "<group>"; };
+		AA002000000000000000000019 /* ConnectivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityMonitor.swift; sourceTree = "<group>"; };
+		AA002000000000000000000020 /* NMEASimulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NMEASimulator.swift; sourceTree = "<group>"; };
+		AA002000000000000000000021 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		AA002000000000000000000022 /* LegModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegModel.swift; sourceTree = "<group>"; };
+		AA002000000000000000000023 /* TripModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripModel.swift; sourceTree = "<group>"; };
+		AA002000000000000000000024 /* TrackPointModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPointModel.swift; sourceTree = "<group>"; };
+		AA002000000000000000000025 /* LogbookEntryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogbookEntryModel.swift; sourceTree = "<group>"; };
+		AA002000000000000000000026 /* TripNoteModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripNoteModel.swift; sourceTree = "<group>"; };
+		AA002000000000000000000027 /* BufferedUploadModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BufferedUploadModel.swift; sourceTree = "<group>"; };
+		AA002000000000000000000028 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		AA002000000000000000000029 /* TrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000030 /* InstrumentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentCard.swift; sourceTree = "<group>"; };
+		AA002000000000000000000031 /* TripsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripsView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000032 /* TripCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripCardView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000033 /* LegRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegRowView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000034 /* LegDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegDetailView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000035 /* LegMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegMapView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000036 /* ArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000037 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000038 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000039 /* DeveloperModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperModeView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000040 /* NMEALogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NMEALogView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000041 /* OnBoatChecklistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnBoatChecklistView.swift; sourceTree = "<group>"; };
+		AA002000000000000000000042 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA002000000000000000000043 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA002000000000000000000044 /* YachtLogbook.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = YachtLogbook.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA000000000000000000000013 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA003000000000000000000043 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA000000000000000000000002 /* MainGroup */ = {
+			isa = PBXGroup;
+			children = (
+				AA001000000000000000000001 /* YachtLogbook */,
+				AA000000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA000000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000000005 /* YachtLogbook.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000001 /* YachtLogbook */ = {
+			isa = PBXGroup;
+			children = (
+				AA001000000000000000000002 /* App */,
+				AA001000000000000000000003 /* NMEA */,
+				AA001000000000000000000005 /* Networking */,
+				AA001000000000000000000006 /* Location */,
+				AA001000000000000000000007 /* Data */,
+				AA001000000000000000000009 /* Views */,
+				AA001000000000000000000017 /* Resources */,
+			);
+			path = YachtLogbook;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000002 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000001 /* YachtLogbookApp.swift */,
+				AA002000000000000000000002 /* AppState.swift */,
+				AA002000000000000000000003 /* Config.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000003 /* NMEA */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000004 /* NMEASentenceParser.swift */,
+				AA002000000000000000000005 /* NMEAParserRegistry.swift */,
+				AA002000000000000000000006 /* VesselState.swift */,
+				AA001000000000000000000004 /* Parsers */,
+			);
+			path = NMEA;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000004 /* Parsers */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000007 /* GPRMCParser.swift */,
+				AA002000000000000000000008 /* GPGGAParser.swift */,
+				AA002000000000000000000009 /* IIMWVParser.swift */,
+				AA002000000000000000000010 /* IIMWDParser.swift */,
+				AA002000000000000000000011 /* IIDBTParser.swift */,
+				AA002000000000000000000012 /* IIDPTParser.swift */,
+				AA002000000000000000000013 /* IIVHWParser.swift */,
+				AA002000000000000000000014 /* IIMTWParser.swift */,
+				AA002000000000000000000015 /* IIHDGParser.swift */,
+				AA002000000000000000000016 /* IIHDTParser.swift */,
+				AA002000000000000000000017 /* IIXDRParser.swift */,
+			);
+			path = Parsers;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000005 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000018 /* NMEATCPClient.swift */,
+				AA002000000000000000000019 /* ConnectivityMonitor.swift */,
+				AA002000000000000000000020 /* NMEASimulator.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000006 /* Location */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000021 /* LocationManager.swift */,
+			);
+			path = Location;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000007 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				AA001000000000000000000008 /* Models */,
+				AA002000000000000000000028 /* SupabaseService.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000008 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000022 /* LegModel.swift */,
+				AA002000000000000000000023 /* TripModel.swift */,
+				AA002000000000000000000024 /* TrackPointModel.swift */,
+				AA002000000000000000000025 /* LogbookEntryModel.swift */,
+				AA002000000000000000000026 /* TripNoteModel.swift */,
+				AA002000000000000000000027 /* BufferedUploadModel.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000009 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AA001000000000000000000010 /* Tracking */,
+				AA001000000000000000000011 /* Trips */,
+				AA001000000000000000000012 /* LegDetail */,
+				AA001000000000000000000013 /* Archive */,
+				AA001000000000000000000014 /* Auth */,
+				AA001000000000000000000015 /* Settings */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000010 /* Tracking */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000029 /* TrackingView.swift */,
+				AA002000000000000000000030 /* InstrumentCard.swift */,
+			);
+			path = Tracking;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000011 /* Trips */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000031 /* TripsView.swift */,
+				AA002000000000000000000032 /* TripCardView.swift */,
+				AA002000000000000000000033 /* LegRowView.swift */,
+			);
+			path = Trips;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000012 /* LegDetail */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000034 /* LegDetailView.swift */,
+				AA002000000000000000000035 /* LegMapView.swift */,
+			);
+			path = LegDetail;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000013 /* Archive */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000036 /* ArchiveView.swift */,
+			);
+			path = Archive;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000014 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000037 /* LoginView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000015 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000038 /* SettingsView.swift */,
+				AA001000000000000000000016 /* DeveloperMode */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000016 /* DeveloperMode */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000039 /* DeveloperModeView.swift */,
+				AA002000000000000000000040 /* NMEALogView.swift */,
+				AA002000000000000000000041 /* OnBoatChecklistView.swift */,
+			);
+			path = DeveloperMode;
+			sourceTree = "<group>";
+		};
+		AA001000000000000000000017 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AA002000000000000000000042 /* Info.plist */,
+				AA002000000000000000000043 /* Assets.xcassets */,
+				AA002000000000000000000044 /* YachtLogbook.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA000000000000000000000004 /* YachtLogbook */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA000000000000000000000007 /* Build configuration list for PBXNativeTarget "YachtLogbook" */;
+			buildPhases = (
+				AA000000000000000000000012 /* Sources */,
+				AA000000000000000000000013 /* Frameworks */,
+				AA000000000000000000000014 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = YachtLogbook;
+			packageProductDependencies = (
+				AA000000000000000000000016 /* Supabase */,
+			);
+			productName = YachtLogbook;
+			productReference = AA000000000000000000000005 /* YachtLogbook.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					AA000000000000000000000004 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = AA000000000000000000000006 /* Build configuration list for PBXProject "YachtLogbook" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA000000000000000000000002;
+			packageReferences = (
+				AA000000000000000000000015 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
+			productRefGroup = AA000000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA000000000000000000000004 /* YachtLogbook */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA000000000000000000000014 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA003000000000000000000042 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA000000000000000000000012 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA003000000000000000000001 /* YachtLogbookApp.swift in Sources */,
+				AA003000000000000000000002 /* AppState.swift in Sources */,
+				AA003000000000000000000003 /* Config.swift in Sources */,
+				AA003000000000000000000004 /* NMEASentenceParser.swift in Sources */,
+				AA003000000000000000000005 /* NMEAParserRegistry.swift in Sources */,
+				AA003000000000000000000006 /* VesselState.swift in Sources */,
+				AA003000000000000000000007 /* GPRMCParser.swift in Sources */,
+				AA003000000000000000000008 /* GPGGAParser.swift in Sources */,
+				AA003000000000000000000009 /* IIMWVParser.swift in Sources */,
+				AA003000000000000000000010 /* IIMWDParser.swift in Sources */,
+				AA003000000000000000000011 /* IIDBTParser.swift in Sources */,
+				AA003000000000000000000012 /* IIDPTParser.swift in Sources */,
+				AA003000000000000000000013 /* IIVHWParser.swift in Sources */,
+				AA003000000000000000000014 /* IIMTWParser.swift in Sources */,
+				AA003000000000000000000015 /* IIHDGParser.swift in Sources */,
+				AA003000000000000000000016 /* IIHDTParser.swift in Sources */,
+				AA003000000000000000000017 /* IIXDRParser.swift in Sources */,
+				AA003000000000000000000018 /* NMEATCPClient.swift in Sources */,
+				AA003000000000000000000019 /* ConnectivityMonitor.swift in Sources */,
+				AA003000000000000000000020 /* NMEASimulator.swift in Sources */,
+				AA003000000000000000000021 /* LocationManager.swift in Sources */,
+				AA003000000000000000000022 /* LegModel.swift in Sources */,
+				AA003000000000000000000023 /* TripModel.swift in Sources */,
+				AA003000000000000000000024 /* TrackPointModel.swift in Sources */,
+				AA003000000000000000000025 /* LogbookEntryModel.swift in Sources */,
+				AA003000000000000000000026 /* TripNoteModel.swift in Sources */,
+				AA003000000000000000000027 /* BufferedUploadModel.swift in Sources */,
+				AA003000000000000000000028 /* SupabaseService.swift in Sources */,
+				AA003000000000000000000029 /* TrackingView.swift in Sources */,
+				AA003000000000000000000030 /* InstrumentCard.swift in Sources */,
+				AA003000000000000000000031 /* TripsView.swift in Sources */,
+				AA003000000000000000000032 /* TripCardView.swift in Sources */,
+				AA003000000000000000000033 /* LegRowView.swift in Sources */,
+				AA003000000000000000000034 /* LegDetailView.swift in Sources */,
+				AA003000000000000000000035 /* LegMapView.swift in Sources */,
+				AA003000000000000000000036 /* ArchiveView.swift in Sources */,
+				AA003000000000000000000037 /* LoginView.swift in Sources */,
+				AA003000000000000000000038 /* SettingsView.swift in Sources */,
+				AA003000000000000000000039 /* DeveloperModeView.swift in Sources */,
+				AA003000000000000000000040 /* NMEALogView.swift in Sources */,
+				AA003000000000000000000041 /* OnBoatChecklistView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA000000000000000000000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA000000000000000000000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AA000000000000000000000010 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "YachtLogbook/Resources/YachtLogbook.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "YachtLogbook/Resources/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nadira.yachtlogbook";
+				PRODUCT_NAME = YachtLogbook;
+				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		AA000000000000000000000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "YachtLogbook/Resources/YachtLogbook.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "YachtLogbook/Resources/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nadira.yachtlogbook";
+				PRODUCT_NAME = YachtLogbook;
+				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA000000000000000000000006 /* Build configuration list for PBXProject "YachtLogbook" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000000000000000000000008 /* Debug */,
+				AA000000000000000000000009 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA000000000000000000000007 /* Build configuration list for PBXNativeTarget "YachtLogbook" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000000000000000000000010 /* Debug */,
+				AA000000000000000000000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AA000000000000000000000015 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AA000000000000000000000016 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000000000000000000000015 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
+
+	};
+	rootObject = AA000000000000000000000001 /* Project object */;
+}
